@@ -1,5 +1,6 @@
 package com.example.ktop_food_app.Activity;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -16,14 +17,16 @@ public class OnboardingActivity extends FirebaseActivity {
         setContentView(binding.getRoot());
 
         setVariable();
-        getWindow().setStatusBarColor(Color.parseColor("#F9C77A"));
+//        getWindow().setStatusBarColor(Color.parseColor("#F9C77A"));
     }
 
     private void setVariable() {
         binding.btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Logic login button
+                Intent intent = new Intent(OnboardingActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
 
