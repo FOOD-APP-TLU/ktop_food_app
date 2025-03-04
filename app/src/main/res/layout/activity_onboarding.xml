@@ -8,8 +8,6 @@
     tools:context=".Activity.OnboardingActivity">
 
     <!-- Background Image -->
-
-    <!-- Logo -->
     <ImageView
         android:id="@+id/image_background"
         android:layout_width="0dp"
@@ -25,6 +23,7 @@
         app:srcCompat="@drawable/cover"
         tools:ignore="HardcodedText" />
 
+    <!-- Logo -->
     <ImageView
         android:id="@+id/image_logo"
         android:layout_width="wrap_content"
@@ -39,9 +38,6 @@
         tools:ignore="ContentDescription" />
 
     <!-- Welcome Text -->
-
-    <!-- Description -->
-
     <TextView
         android:id="@+id/text_welcome"
         android:layout_width="0dp"
@@ -59,6 +55,7 @@
         app:layout_constraintTop_toBottomOf="@+id/image_logo"
         tools:ignore="HardcodedText" />
 
+    <!-- Description -->
     <TextView
         android:id="@+id/text_description"
         android:layout_width="0dp"
