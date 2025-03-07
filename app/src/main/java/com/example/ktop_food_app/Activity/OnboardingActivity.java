@@ -17,7 +17,7 @@ public class OnboardingActivity extends FirebaseActivity {
         setContentView(binding.getRoot());
 
         setVariable();
-//        getWindow().setStatusBarColor(Color.parseColor("#F9C77A"));
+        getWindow().setStatusBarColor(Color.parseColor("#F9C77A"));
     }
 
     private void setVariable() {
@@ -33,7 +33,9 @@ public class OnboardingActivity extends FirebaseActivity {
         binding.btnSignup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Logic signup button
+                Intent intent = new Intent(OnboardingActivity.this, SignUpActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
     }
