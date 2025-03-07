@@ -13,6 +13,9 @@
         android:theme="@style/Theme.Ktop_food_app"
         tools:targetApi="31">
         <activity
+            android:name=".Activity.SignUpActivity"
+            android:exported="false" />
+        <activity
             android:name=".Activity.LoginActivity"
             android:exported="false" />
         <activity

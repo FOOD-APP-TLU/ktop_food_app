@@ -1,5 +1,6 @@
 package com.example.ktop_food_app.Activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.widget.Toast;
@@ -32,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
         handleVisibilityToggle();
     }
 
-    private void handleLogin(){
+    private void handleLogin() {
         binding.btnLogin.setOnClickListener(v -> {
             if (validateLogin()) {
                 Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
@@ -40,13 +41,15 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void handleSignup(){
+    private void handleSignup() {
         binding.txtSignup.setOnClickListener(v -> {
-            // Navigate to sign up page
+            Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+            startActivity(intent);
+            finish();
         });
     }
 
-    private void handleVisibilityToggle(){
+    private void handleVisibilityToggle() {
         binding.imgVisibilityOff.setOnClickListener(v -> {
             if (isPasswordVisible) {
                 binding.txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
