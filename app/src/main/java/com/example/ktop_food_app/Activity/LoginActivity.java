@@ -2,7 +2,9 @@ package com.example.ktop_food_app.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -23,6 +25,9 @@ public class LoginActivity extends AppCompatActivity {
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        //Handle check Login button click
+        checkActive();
+
         // Handle Login Button click
         handleLogin();
 
@@ -31,10 +36,25 @@ public class LoginActivity extends AppCompatActivity {
 
         // Handle password visibility toggle
         handleVisibilityToggle();
+
+        // Handle TextWatchers to validate dynamic
+        handleTextWatchers();
+
+    }
+
+    private void checkActive() {
+        if (validateLogin()) {
+            binding.btnLogin.setBackgroundResource(R.drawable.btn_background_success);
+            binding.btnLogin.setEnabled(true);
+        } else {
+            binding.btnLogin.setBackgroundResource(R.drawable.btn_background_default);
+            binding.btnLogin.setEnabled(false);
+        }
     }
 
     private void handleLogin() {
         binding.btnLogin.setOnClickListener(v -> {
+            checkActive();
             if (validateLogin()) {
                 Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
             }
@@ -64,34 +84,62 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean validateLogin() {
-        String username = binding.txtEmail.getText().toString().trim();
+        String username = binding.txtUsername.getText().toString().trim();
         String password = binding.txtPassword.getText().toString().trim();
 
         if (username.isEmpty()) {
-            binding.txtEmail.setError("Please enter username or email");
-            binding.txtEmail.requestFocus();
+            binding.txtUsername.setError("Please enter username or email");
             return false;
         }
 
         String emailRegex = "^[a-z0-9._%+-]+@[a-z.-]+\\.[a-z]{2,}$";
         if (!username.matches(emailRegex)) {
-            binding.txtEmail.setError("Invalid email format");
-            binding.txtEmail.requestFocus();
+            binding.txtUsername.setError("Invalid email format");
             return false;
         }
 
         if (password.isEmpty()) {
             binding.txtPassword.setError("Please enter password");
-            binding.txtPassword.requestFocus();
             return false;
         }
 
         if (password.length() < 8) {
             binding.txtPassword.setError("Password must be at least 8 characters long");
-            binding.txtPassword.requestFocus();
             return false;
         }
 
         return true;
+    }
+
+    private void handleTextWatchers() {
+        binding.txtUsername.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+                checkActive();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+
+        binding.txtPassword.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+                checkActive();
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
     }
 }
