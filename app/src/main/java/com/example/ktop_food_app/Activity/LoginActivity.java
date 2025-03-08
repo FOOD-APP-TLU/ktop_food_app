@@ -31,11 +31,14 @@ public class LoginActivity extends AppCompatActivity {
         // Handle Login Button click
         handleLogin();
 
-        // Handle Sign Up Text click
+        // Handle Sign Up text click
         handleSignup();
 
         // Handle password visibility toggle
         handleVisibilityToggle();
+
+        // Handle Forgot Password text click
+        handleForgotPassword();
 
         // Handle TextWatchers to validate dynamic
         handleTextWatchers();
@@ -80,6 +83,13 @@ public class LoginActivity extends AppCompatActivity {
             }
             binding.txtPassword.setSelection(binding.txtPassword.getText().length());
             isPasswordVisible = !isPasswordVisible;
+        });
+    }
+
+    private void handleForgotPassword() {
+        binding.txtForgotPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
         });
     }
 
