@@ -59,7 +59,7 @@
 
                 <!-- Username edittext -->
                 <EditText
-                    android:id="@+id/txt_email"
+                    android:id="@+id/txt_username"
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
                     android:layout_marginTop="24dp"
@@ -125,7 +125,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="105dp"
-                android:background="@drawable/btn_background_success"
+                android:background="@drawable/btn_background_default"
                 android:fontFamily="@font/lilita_one"
                 android:text="Login"
                 android:textAllCaps="false"
