@@ -1,4 +1,4 @@
-package com.example.ktop_food_app.Activity;
+package com.example.ktop_food_app.App.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,74 +11,68 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.ktop_food_app.R;
-import com.example.ktop_food_app.databinding.ActivitySignUpBinding;
+import com.example.ktop_food_app.databinding.ActivityLoginBinding;
 
-public class SignUpActivity extends AppCompatActivity {
-    private ActivitySignUpBinding binding;
+public class LoginActivity extends AppCompatActivity {
+    private ActivityLoginBinding binding;
     private boolean isPasswordVisible = false;
-    private boolean isConfirmPasswordVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
 
-        binding = ActivitySignUpBinding.inflate(getLayoutInflater());
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        //Handle check SignUp button click
+        //Handle check Login button click
         checkActive();
-        // Handle Login Text click
+
+        // Handle Login Button click
         handleLogin();
 
-        // Handle SignUp button click
+        // Handle Sign Up text click
         handleSignup();
 
-        // Handle Password visibility toggle
+        // Handle password visibility toggle
         handleVisibilityToggle();
+
+        // Handle Forgot Password text click
+        handleForgotPassword();
 
         // Handle TextWatchers to validate dynamic
         handleTextWatchers();
 
-        // Handle Checkbox change
-        handleCheckboxChange();
     }
 
     private void checkActive() {
-        if (validateSignUp() && binding.checkBox.isChecked()) {
-            binding.btnSignup.setBackgroundResource(R.drawable.btn_background_success);
-            binding.btnSignup.setEnabled(true);
+        if (validateLogin()) {
+            binding.btnLogin.setBackgroundResource(R.drawable.btn_background_success);
+            binding.btnLogin.setEnabled(true);
         } else {
-            binding.btnSignup.setBackgroundResource(R.drawable.btn_background_default);
-            binding.btnSignup.setEnabled(false);
+            binding.btnLogin.setBackgroundResource(R.drawable.btn_background_default);
+            binding.btnLogin.setEnabled(false);
         }
     }
 
-    private void handleCheckboxChange() {
-        binding.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+    private void handleLogin() {
+        binding.btnLogin.setOnClickListener(v -> {
             checkActive();
-        });
-    }
-
-    private void handleSignup() {
-        binding.btnSignup.setOnClickListener(v -> {
-            checkActive();
-            if (validateSignUp()) {
-                Toast.makeText(SignUpActivity.this, "Register account successful", Toast.LENGTH_SHORT).show();
+            if (validateLogin()) {
+                Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void handleLogin() {
-        binding.txtLogin.setOnClickListener(v -> {
-            Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
+    private void handleSignup() {
+        binding.txtSignup.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
             startActivity(intent);
             finish();
         });
     }
 
     private void handleVisibilityToggle() {
-        // Toggle for password visibility
         binding.imgVisibilityOff.setOnClickListener(v -> {
             if (isPasswordVisible) {
                 binding.txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
@@ -88,29 +82,20 @@ public class SignUpActivity extends AppCompatActivity {
                 binding.imgVisibilityOff.setImageResource(R.drawable.visibility_on);
             }
             binding.txtPassword.setSelection(binding.txtPassword.getText().length());
-
             isPasswordVisible = !isPasswordVisible;
-        });
-
-        // Toggle for confirm password visibility
-        binding.imgConfirmVisibilityOff.setOnClickListener(v -> {
-            if (isConfirmPasswordVisible) {
-                binding.txtConfirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                binding.imgConfirmVisibilityOff.setImageResource(R.drawable.visibility_off);
-            } else {
-                binding.txtConfirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                binding.imgConfirmVisibilityOff.setImageResource(R.drawable.visibility_on);
-            }
-            binding.txtConfirmPassword.setSelection(binding.txtConfirmPassword.getText().length());
-
-            isConfirmPasswordVisible = !isConfirmPasswordVisible;
         });
     }
 
-    private boolean validateSignUp() {
+    private void handleForgotPassword() {
+        binding.txtForgotPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
+        });
+    }
+
+    private boolean validateLogin() {
         String username = binding.txtUsername.getText().toString().trim();
         String password = binding.txtPassword.getText().toString().trim();
-        String confirmpassword = binding.txtConfirmPassword.getText().toString().trim();
 
         if (username.isEmpty()) {
             binding.txtUsername.setError("Please enter username or email");
@@ -133,24 +118,8 @@ public class SignUpActivity extends AppCompatActivity {
             return false;
         }
 
-        if (confirmpassword.isEmpty()) {
-            binding.txtConfirmPassword.setError("Please enter confirm password");
-            return false;
-        }
-
-        if (confirmpassword.length() < 8) {
-            binding.txtConfirmPassword.setError("Confirm Password must be at least 8 characters long");
-            return false;
-        }
-
-        if (!password.equals(confirmpassword)) {
-            binding.txtConfirmPassword.setError("Passwords do not match");
-            return false;
-        }
-
         return true;
     }
-
 
     private void handleTextWatchers() {
         binding.txtUsername.addTextChangedListener(new TextWatcher() {
@@ -169,21 +138,6 @@ public class SignUpActivity extends AppCompatActivity {
         });
 
         binding.txtPassword.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                checkActive();
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-
-        binding.txtConfirmPassword.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
             }
