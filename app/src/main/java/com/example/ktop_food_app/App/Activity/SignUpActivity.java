@@ -81,10 +81,10 @@ public class SignUpActivity extends AppCompatActivity {
         // Toggle for password visibility
         binding.imgVisibilityOff.setOnClickListener(v -> {
             if (isPasswordVisible) {
-                binding.txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                binding.txtPassword.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
                 binding.imgVisibilityOff.setImageResource(R.drawable.visibility_off);
             } else {
-                binding.txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                binding.txtPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
                 binding.imgVisibilityOff.setImageResource(R.drawable.visibility_on);
             }
             binding.txtPassword.setSelection(binding.txtPassword.getText().length());
@@ -95,10 +95,10 @@ public class SignUpActivity extends AppCompatActivity {
         // Toggle for confirm password visibility
         binding.imgConfirmVisibilityOff.setOnClickListener(v -> {
             if (isConfirmPasswordVisible) {
-                binding.txtConfirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                binding.txtConfirmPassword.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
                 binding.imgConfirmVisibilityOff.setImageResource(R.drawable.visibility_off);
             } else {
-                binding.txtConfirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                binding.txtConfirmPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
                 binding.imgConfirmVisibilityOff.setImageResource(R.drawable.visibility_on);
             }
             binding.txtConfirmPassword.setSelection(binding.txtConfirmPassword.getText().length());
