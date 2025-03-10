@@ -16,19 +16,19 @@
             android:name=".App.ForgotPasswordConfirmActivity"
             android:exported="false" />
         <activity
-            android:name=".App.Activity.ForgotPasswordActivity"
+            android:name=".App.view.Activity.ForgotPasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".App.Activity.SignUpActivity"
+            android:name=".App.view.Activity.SignUpActivity"
             android:exported="false" />
         <activity
-            android:name=".App.Activity.LoginActivity"
+            android:name=".App.view.Activity.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".App.Activity.FirebaseActivity"
+            android:name=".App.model.Data.Firebase.FirebaseActivity"
             android:exported="false" />
         <activity
-            android:name=".App.Activity.OnboardingActivity"
+            android:name=".App.view.Activity.OnboardingActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

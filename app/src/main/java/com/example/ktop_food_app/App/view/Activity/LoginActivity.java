@@ -1,4 +1,4 @@
-package com.example.ktop_food_app.App.Activity;
+package com.example.ktop_food_app.App.view.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -75,10 +75,10 @@ public class LoginActivity extends AppCompatActivity {
     private void handleVisibilityToggle() {
         binding.imgVisibilityOff.setOnClickListener(v -> {
             if (isPasswordVisible) {
-                binding.txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                binding.txtPassword.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
                 binding.imgVisibilityOff.setImageResource(R.drawable.visibility_off);
             } else {
-                binding.txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                binding.txtPassword.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
                 binding.imgVisibilityOff.setImageResource(R.drawable.visibility_on);
             }
             binding.txtPassword.setSelection(binding.txtPassword.getText().length());
