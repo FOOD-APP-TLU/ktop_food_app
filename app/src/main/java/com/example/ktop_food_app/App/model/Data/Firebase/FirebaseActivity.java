@@ -1,9 +1,8 @@
-package com.example.ktop_food_app.App.Activity;
+package com.example.ktop_food_app.App.model.Data.Firebase;
 
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 
 import com.example.ktop_food_app.R;
 import com.google.firebase.auth.FirebaseAuth;

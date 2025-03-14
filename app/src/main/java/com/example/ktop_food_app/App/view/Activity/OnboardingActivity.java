@@ -1,10 +1,11 @@
-package com.example.ktop_food_app.App.Activity;
+package com.example.ktop_food_app.App.view.Activity;
 
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 
+import com.example.ktop_food_app.App.model.Data.Firebase.FirebaseActivity;
 import com.example.ktop_food_app.databinding.ActivityOnboardingBinding;
 
 public class OnboardingActivity extends FirebaseActivity {

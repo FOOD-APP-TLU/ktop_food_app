@@ -1,4 +1,4 @@
-package com.example.ktop_food_app.App.Activity;
+package com.example.ktop_food_app.App.view.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
