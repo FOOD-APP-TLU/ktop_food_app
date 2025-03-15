@@ -1,4 +1,4 @@
-package com.example.ktop_food_app.App.model.Entities;
+package com.example.ktop_food_app.App.model.Entity;
 
 public class Food {
     private final int id;
@@ -7,10 +7,10 @@ public class Food {
     private final int price;
     private final float rate;
     private final String time;
-    private final String img;
+    private final int img;
     private final Category category;
 
-    public Food(int id, String name, String description, int price, float rate, String time, String img, Category category) {
+    public Food(int id, String name, String description, int price, float rate, String time, int img, Category category) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -45,7 +45,7 @@ public class Food {
         return time;
     }
 
-    public String getImg() {
+    public int getImg() {
         return img;
     }
 
