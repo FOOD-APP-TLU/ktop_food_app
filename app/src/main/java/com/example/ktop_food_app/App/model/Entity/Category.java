@@ -1,4 +1,4 @@
-package com.example.ktop_food_app.App.model.Entities;
+package com.example.ktop_food_app.App.model.Entity;
 
 public class Category {
     private final int id;
