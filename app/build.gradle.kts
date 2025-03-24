@@ -47,6 +47,8 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.android.material:material:1.12.0")
+
     implementation(libs.credentials)
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
@@ -54,6 +56,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+    implementation(libs.ui.text.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

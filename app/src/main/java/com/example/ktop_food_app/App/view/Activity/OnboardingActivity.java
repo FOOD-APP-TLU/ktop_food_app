@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.example.ktop_food_app.App.model.Data.Firebase.FirebaseActivity;
+import com.example.ktop_food_app.App.view.Activity.Auth.LoginActivity;
+import com.example.ktop_food_app.App.view.Activity.Auth.SignUpActivity;
 import com.example.ktop_food_app.databinding.ActivityOnboardingBinding;
 
 public class OnboardingActivity extends FirebaseActivity {

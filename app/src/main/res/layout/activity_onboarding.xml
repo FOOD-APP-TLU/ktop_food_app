@@ -25,7 +25,7 @@
 
     <!-- Logo -->
     <ImageView
-        android:id="@+id/image_logo"
+        android:id="@+id/logo_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
@@ -39,7 +39,7 @@
 
     <!-- Welcome Text -->
     <TextView
-        android:id="@+id/text_welcome"
+        android:id="@+id/txt_welcome"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -52,12 +52,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/image_logo"
+        app:layout_constraintTop_toBottomOf="@+id/logo_icon"
         tools:ignore="HardcodedText" />
 
     <!-- Description -->
     <TextView
-        android:id="@+id/text_description"
+        android:id="@+id/txt_description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -68,7 +68,7 @@
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_welcome"
+        app:layout_constraintTop_toBottomOf="@+id/txt_welcome"
         tools:ignore="HardcodedText" />
 
     <!-- SignUp Button -->
