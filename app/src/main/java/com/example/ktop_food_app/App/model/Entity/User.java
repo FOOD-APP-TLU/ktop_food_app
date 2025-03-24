@@ -1,13 +1,16 @@
 package com.example.ktop_food_app.App.model.Entity;
 
 public class User {
-    private int img; // Lưu resource id của ảnh
+    private int id; // Them truong id de dinh danh user
+    private int img; // Luu resource id cua anh
     private String name;
     private String email;
     private String number;
     private String address;
 
-    public User(int img, String name, String email, String number, String address) {
+    // Cap nhat constructor de them truong id
+    public User(int id, int img, String name, String email, String number, String address) {
+        this.id = id;
         this.img = img;
         this.name = name;
         this.email = email;
@@ -16,6 +19,15 @@ public class User {
     }
 
     // Getters & Setters
+    // Getter va Setter cho truong id
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public int getImg() {
         return img;
     }

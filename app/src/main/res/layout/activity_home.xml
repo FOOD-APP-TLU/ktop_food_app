@@ -1,25 +1,150 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:openDrawer="start">
+    android:background="@color/background_color"
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <include
-        android:id="@+id/app_bar_home"
-        layout="@layout/app_bar_home"
+    <!-- Header with menu, welcome text, and profile icon -->
+    <RelativeLayout
+        android:id="@+id/header_section"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
+        <!-- Menu button icon -->
+        <ImageView
+            android:id="@+id/menu_button_icon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_centerVertical="true"
+            android:clickable="true"
+            android:contentDescription="Menu"
+            android:focusable="true"
+            android:src="@drawable/menu_icon"
+            tools:ignore="TouchTargetSizeCheck" />
+
+        <!-- Welcome text -->
+        <TextView
+            android:id="@+id/txt_welcome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Welcome"
+            android:textColor="@color/text_color_primary"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+
+        <!-- User image -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/img_user"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:clickable="true"
+            android:contentDescription="User Profile"
+            android:focusable="true"
+            android:scaleType="centerCrop"
+            app:shapeAppearanceOverlay="@style/UserImageBorder"
+            tools:ignore="TouchTargetSizeCheck" />
+    </RelativeLayout>
+
+    <!-- Search bar with input and cart icon -->
+    <LinearLayout
+        android:id="@+id/search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <!-- Search input container -->
+        <FrameLayout
+            android:layout_width="310dp"
+            android:layout_height="40dp">
+
+            <!-- Search input field -->
+            <EditText
+                android:id="@+id/edt_search"
+                android:layout_width="310dp"
+                android:layout_height="40dp"
+                android:background="@drawable/custom_bg_txt"
+                android:fontFamily="@font/annapurna_sil"
+                android:hint="Search Food..."
+                android:inputType="text"
+                android:minHeight="48dp"
+                android:paddingLeft="16dp"
+                android:singleLine="true"
+                android:textColor="@color/text_color_secondary"
+                android:textColorHint="#80B57E35"
+                android:textSize="16sp"
+                tools:ignore="TouchTargetSizeCheck" />
+
+            <!-- Search button icon -->
+            <ImageView
+                android:id="@+id/search_button_icon"
+                android:layout_width="36dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/search_icon" />
+        </FrameLayout>
+
+        <!-- Cart icon -->
+        <ImageView
+            android:id="@+id/cart_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="16dp"
+            android:contentDescription="Shopping Cart"
+            android:src="@drawable/cart_icon" />
+    </LinearLayout>
+
+    <!-- Main content with food list and categories -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header_home"
-        app:menu="@menu/activity_main_drawer" />
-</androidx.drawerlayout.widget.DrawerLayout>
+        android:layout_marginTop="8dp"
+        android:orientation="vertical">
+
+        <!-- Title for best foods -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:fontFamily="@font/linden_hill"
+            android:text="Today's best Foods"
+            android:textColor="#8E4B03"
+            android:textSize="32sp" />
+
+        <!-- RecyclerView for food list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_foods"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+        <!-- Title for categories -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
+            android:fontFamily="@font/linden_hill"
+            android:text="Choose Category"
+            android:textColor="#8E4B03"
+            android:textSize="28sp" />
+
+        <!-- GridView for categories -->
+        <GridView
+            android:id="@+id/grid_View_categories"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:horizontalSpacing="28dp"
+            android:numColumns="4"
+            android:verticalSpacing="16dp" />
+    </LinearLayout>
+</LinearLayout>
