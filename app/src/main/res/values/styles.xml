@@ -18,4 +18,9 @@
         <item name="strokeColor">#B0C4DE</item>
         <item name="strokeWidth">2dp</item>
     </style>
+
+    <style name="BorderImgFoodDetail">
+        <item name="cornerSize">26dp</item>
+    </style>
+
 </resources>
