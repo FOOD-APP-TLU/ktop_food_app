@@ -13,6 +13,9 @@
         android:theme="@style/Theme.Ktop_food_app"
         tools:targetApi="31">
         <activity
+            android:name=".App.view.Activity.CartActivity"
+            android:exported="false" />
+        <activity
             android:name=".App.view.Activity.Home.NavHomeActivity"
             android:exported="false"
             android:theme="@style/Theme.Ktop_food_app.NoActionBar" />

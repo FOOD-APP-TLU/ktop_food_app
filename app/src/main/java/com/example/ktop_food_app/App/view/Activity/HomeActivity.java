@@ -2,54 +2,58 @@ package com.example.ktop_food_app.App.view.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.bumptech.glide.Glide; // Thêm Glide để tải ảnh từ URL
 import com.example.ktop_food_app.App.controller.Adapter.CategoryAdapter;
 import com.example.ktop_food_app.App.controller.Adapter.FoodAdapter;
-import com.example.ktop_food_app.App.model.Data.Database.DataGenerator;
 import com.example.ktop_food_app.App.model.Entity.Category;
 import com.example.ktop_food_app.App.model.Entity.Food;
-import com.example.ktop_food_app.App.model.Entity.User;
 import com.example.ktop_food_app.App.model.Repository.CategoryRepository;
 import com.example.ktop_food_app.App.model.Repository.FoodRepository;
 import com.example.ktop_food_app.App.view.Activity.Auth.LoginActivity;
 import com.example.ktop_food_app.R;
 import com.example.ktop_food_app.databinding.ActivityNavHomeBinding;
 import com.example.ktop_food_app.databinding.NavHeaderBinding;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
-// Lop HomeActivity quan ly giao dien chinh voi navigation drawer va load du lieu
 public class HomeActivity extends AppCompatActivity {
 
-    private ActivityNavHomeBinding binding; // Binding cho layout activity_nav_home.xml
-    private NavHeaderBinding headerBinding; // Binding cho layout nav_header.xml
-    private FoodRepository foodRepository; // Kho luu tru mon an
-    private CategoryRepository categoryRepository; // Kho luu tru danh muc
-    private FoodAdapter foodAdapter; // Adapter cho danh sach mon an
-    private CategoryAdapter categoryAdapter; // Adapter cho danh sach danh muc
+    private ActivityNavHomeBinding binding;
+    private NavHeaderBinding headerBinding;
+    private FoodRepository foodRepository;
+    private CategoryRepository categoryRepository;
+    private FoodAdapter foodAdapter;
+    private CategoryAdapter categoryAdapter;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mAuth = FirebaseAuth.getInstance();
 
-        // Khoi tao View Binding
         binding = ActivityNavHomeBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Bind vao header view hien co cua NavigationView
         headerBinding = NavHeaderBinding.bind(binding.navView.getHeaderView(0));
 
-        // Khoi tao cac kho luu tru
         foodRepository = new FoodRepository();
         categoryRepository = new CategoryRepository();
 
-        // Thiet lap cac thanh phan giao dien va lang nghe su kien
         setupRecyclerViews();
         handleSearchButton();
         loadData();
@@ -59,18 +63,64 @@ public class HomeActivity extends AppCompatActivity {
         handleLogoutButton();
         handleProfileImage();
         handleCartButton();
-        loadProfileImage();
+        loadProfileImage(); // Gọi hàm này để tải avatar từ Realtime Database
     }
 
-    // Xu ly backup_icon de dong drawer
+    // Cập nhật hàm loadProfileImage để lấy URL avatar từ Realtime Database và dùng Glide
+    private void loadProfileImage() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            // Nếu user chưa đăng nhập, chuyển về LoginActivity
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
+        // Lấy UID của user hiện tại
+        String uid = currentUser.getUid();
+        String databaseUrl = "https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app";
+        DatabaseReference userRef = FirebaseDatabase.getInstance(databaseUrl)
+                .getReference("users")
+                .child(uid)
+                .child("profile")
+                .child("avatar");
+
+        // Đọc dữ liệu từ Realtime Database
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String avatarUrl = dataSnapshot.getValue(String.class);
+                if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                    // Sử dụng Glide để tải ảnh từ URL vào ImageView
+                    Glide.with(HomeActivity.this)
+                            .load(avatarUrl)
+                            .placeholder(R.drawable.img_user) // Ảnh mặc định khi đang tải
+                            .error(R.drawable.img_user)       // Ảnh mặc định nếu lỗi
+                            .into(binding.home.imgUser);
+                } else {
+                    // Nếu không có avatar, dùng ảnh mặc định
+                    binding.home.imgUser.setImageResource(R.drawable.img_user);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Xử lý lỗi nếu không đọc được dữ liệu
+                Toast.makeText(HomeActivity.this, "Lỗi tải avatar: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                binding.home.imgUser.setImageResource(R.drawable.img_user);
+            }
+        });
+    }
+
     private void handleBackUpButton() {
         headerBinding.imgBackArrow.setOnClickListener(v ->
                 binding.drawerLayout.closeDrawer(GravityCompat.START));
     }
 
-    // Xu ly nut dang xuat
     private void handleLogoutButton() {
         binding.logoutButton.setOnClickListener(v -> {
+            mAuth.signOut();
             Intent intent = new Intent(this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -78,13 +128,11 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    // Xu ly nut menu de mo drawer
     private void handleMenuButton() {
         binding.home.menuButtonIcon.setOnClickListener(v ->
                 binding.drawerLayout.openDrawer(GravityCompat.START));
     }
 
-    // Xu ly cac muc trong menu cua NavigationView
     private void handleNavigationMenu() {
         binding.navView.setNavigationItemSelectedListener(item -> {
             int itemId = item.getItemId();
@@ -95,41 +143,29 @@ public class HomeActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_order_history) {
                 Toast.makeText(this, "Navigating to Order History Activity", Toast.LENGTH_SHORT).show();
             }
-            binding.drawerLayout.closeDrawer(GravityCompat.START); // Dong drawer sau khi chon
+            binding.drawerLayout.closeDrawer(GravityCompat.START);
             return true;
         });
     }
 
-    // Ham load anh user vao user image
-    private void loadProfileImage() {
-        List<User> userList = DataGenerator.generateSampleUsers();
-
-        if (!userList.isEmpty()) {
-            User firstUser = userList.get(0); // Lay user dau tien (vi du: Nguyen Van A)
-            // Gan anh cua user vao user_icon
-            binding.home.imgUser.setImageResource(firstUser.getImg());
-        } else {
-            // If the user list is empty, set a default image
-            binding.home.imgUser.setImageResource(R.drawable.img_user);
-        }
-    }
-
-    // Xu ly khi nhan vao user image
     private void handleProfileImage() {
         binding.home.imgUser.setOnClickListener(v ->
                 Toast.makeText(this, "Navigating to Profile Activity", Toast.LENGTH_SHORT).show());
     }
 
-    // Xu ly khi nhan vao cart_icon
     private void handleCartButton() {
-        binding.home.cartIcon.setOnClickListener(v ->
-                Toast.makeText(this, "Navigating to Cart Activity", Toast.LENGTH_SHORT).show());
+        binding.home.cartIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(HomeActivity.this, CartActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void setupRecyclerViews() {
         binding.home.recyclerViewFoods.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        // Truyen context (this) vao FoodAdapter
         foodAdapter = new FoodAdapter(this, new ArrayList<>());
         binding.home.recyclerViewFoods.setAdapter(foodAdapter);
 
@@ -138,7 +174,6 @@ public class HomeActivity extends AppCompatActivity {
         binding.home.gridViewCategories.setAdapter(categoryAdapter);
     }
 
-    // Xu ly chuc nang tim kiem
     private void handleSearchButton() {
         binding.home.searchButtonIcon.setOnClickListener(v -> {
             String query = binding.home.edtSearch.getText().toString().trim();
@@ -146,7 +181,6 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    // Loc danh sach mon an dua tren tu khoa tim kiem
     private void filterFoods(String query) {
         List<Food> allFoods = foodRepository.getFoodList();
         List<Food> filteredList = new ArrayList<>();
@@ -160,14 +194,12 @@ public class HomeActivity extends AppCompatActivity {
         foodAdapter.notifyDataSetChanged();
     }
 
-    // Tai du lieu vao giao dien
     private void loadData() {
         List<Food> foodList = foodRepository.getFoodList();
         foodAdapter.setFoodList(foodList);
         foodAdapter.notifyDataSetChanged();
     }
 
-    // Xu ly nut Back tren thiet bi
     @Override
     public void onBackPressed() {
         if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {

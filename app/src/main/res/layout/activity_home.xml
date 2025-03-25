@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -23,7 +24,7 @@
             android:clickable="true"
             android:contentDescription="Menu"
             android:focusable="true"
-            android:src="@drawable/menu_icon"
+            app:srcCompat="@drawable/menu_icon"
             tools:ignore="TouchTargetSizeCheck" />
 
         <!-- Welcome text -->
@@ -52,30 +53,34 @@
     </RelativeLayout>
 
     <!-- Search bar with input and cart icon -->
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/search_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal">
+        android:layout_marginTop="8dp">
 
         <!-- Search input container -->
         <FrameLayout
-            android:layout_width="310dp"
-            android:layout_height="40dp">
+            android:id="@+id/search_container"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/cart_icon"
+            app:layout_constraintTop_toTopOf="parent">
 
             <!-- Search input field -->
             <EditText
                 android:id="@+id/edt_search"
-                android:layout_width="310dp"
+                android:layout_width="match_parent"
                 android:layout_height="40dp"
+                android:layout_marginEnd="10dp"
                 android:background="@drawable/custom_bg_txt"
                 android:fontFamily="@font/annapurna_sil"
                 android:hint="Search Food..."
                 android:inputType="text"
                 android:minHeight="48dp"
-                android:paddingLeft="16dp"
+                android:paddingStart="16dp"
                 android:singleLine="true"
                 android:textColor="@color/text_color_secondary"
                 android:textColorHint="#80B57E35"
@@ -88,20 +93,21 @@
                 android:layout_width="36dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|end"
-                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
                 app:srcCompat="@drawable/search_icon" />
         </FrameLayout>
 
         <!-- Cart icon -->
         <ImageView
             android:id="@+id/cart_icon"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="16dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
             android:contentDescription="Shopping Cart"
-            android:src="@drawable/cart_icon" />
-    </LinearLayout>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/cart_icon" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Main content with food list and categories -->
     <LinearLayout
@@ -142,8 +148,8 @@
         <GridView
             android:id="@+id/grid_View_categories"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:horizontalSpacing="28dp"
+            android:layout_height="379dp"
+            android:horizontalSpacing="16dp"
             android:numColumns="4"
             android:verticalSpacing="16dp" />
     </LinearLayout>
