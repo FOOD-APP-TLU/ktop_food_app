@@ -1,6 +1,7 @@
 package com.example.ktop_food_app.App.controller.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -8,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.ktop_food_app.App.model.Entity.Food;
+import com.example.ktop_food_app.App.view.Activity.FoodDetailActivity;
 import com.example.ktop_food_app.databinding.ItemFoodBinding;
 
 import java.util.ArrayList;
@@ -85,11 +87,11 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
             binding.imgFood.setImageResource(food.getImg());
 
             // Xu ly su kien click tren item
-//            binding.getRoot().setOnClickListener(v -> {
-//                Intent intent = new Intent(context, FoodDetailActivity.class);
-//                intent.putExtra("food_item", food); // Truyen toan bo doi tuong Food qua Intent
-//                context.startActivity(intent);
-//            });
+            binding.getRoot().setOnClickListener(v -> {
+                Intent intent = new Intent(context, FoodDetailActivity.class);
+                intent.putExtra("food", food); // Truyen toan bo doi tuong Food qua Intent
+                context.startActivity(intent);
+            });
         }
     }
 }
