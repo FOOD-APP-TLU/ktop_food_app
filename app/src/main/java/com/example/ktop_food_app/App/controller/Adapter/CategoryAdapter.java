@@ -1,6 +1,7 @@
 package com.example.ktop_food_app.App.controller.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.ArrayAdapter;
 import androidx.annotation.NonNull;
 
 import com.example.ktop_food_app.App.model.Entity.Category;
+import com.example.ktop_food_app.App.view.Activity.FoodListActivity;
 import com.example.ktop_food_app.databinding.ItemCategoryBinding;
 
 import java.util.List;
@@ -48,11 +50,11 @@ public class CategoryAdapter extends ArrayAdapter<Category> {
         binding.imgCategory.setImageResource(category.getImg());
 
 //        // Xu ly su kien click tren item
-//        binding.getRoot().setOnClickListener(v -> {
-//            Intent intent = new Intent(context, CategoryDetailActivity.class);
-//            intent.putExtra("category_item", category); // Truyen doi tuong Category qua Intent
-//            context.startActivity(intent);
-//        });
+        binding.getRoot().setOnClickListener(v -> {
+            Intent intent = new Intent(context, FoodListActivity.class);
+            intent.putExtra("category", category); // Truyen doi tuong Category qua Intent
+            context.startActivity(intent);
+        });
 
         binding.getRoot().setPadding(30, 0, 0, 0); // Them padding ben trai 30px cho layout goc
         return convertView;

@@ -1,6 +1,8 @@
 package com.example.ktop_food_app.App.model.Entity;
 
-public class Food {
+import java.io.Serializable;
+
+public class Food implements Serializable {
     private final int id;
     private final String name;
     private final String description;
