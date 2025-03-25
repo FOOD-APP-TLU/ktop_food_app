@@ -14,15 +14,13 @@
         tools:targetApi="31">
         <activity
             android:name=".App.view.Activity.CartActivity"
+            android:exported="false" />
+        <activity
             android:name=".App.view.Activity.FoodDetailActivity"
             android:exported="false" />
         <activity
             android:name=".App.view.Activity.FoodListActivity"
             android:exported="false" />
-        <activity
-            android:name=".App.view.Activity.Home.NavHomeActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Ktop_food_app.NoActionBar" />
         <activity
             android:name=".App.view.Activity.HomeActivity"
             android:exported="false"
@@ -36,9 +34,6 @@
             android:exported="false" />
         <activity
             android:name=".App.view.Activity.Auth.LoginActivity"
-            android:exported="false" />
-        <activity
-            android:name=".App.model.Data.Firebase.FirebaseActivity"
             android:exported="false" />
         <activity
             android:name=".App.view.Activity.OnboardingActivity"
