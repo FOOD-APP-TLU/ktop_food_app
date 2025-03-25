@@ -5,207 +5,173 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.ktop_food_app.App.model.Data.Firebase.FirebaseAuthDataSource;
+import com.example.ktop_food_app.App.model.Repository.AuthRepository;
+import com.example.ktop_food_app.App.utils.AuthValidator;
 import com.example.ktop_food_app.R;
 import com.example.ktop_food_app.databinding.ActivitySignUpBinding;
 
-// Lop SignUpActivity quan ly giao dien dang ky
 public class SignUpActivity extends AppCompatActivity {
-    private boolean isConfirmPasswordVisible = false; // Bien kiem tra trang thai hien thi xac nhan mat khau
-    private ActivitySignUpBinding binding; // Binding cho layout activity_sign_up.xml
-    private boolean isPasswordVisible = false; // Bien kiem tra trang thai hien thi mat khau
+    private boolean isConfirmPasswordVisible = false;
+    private ActivitySignUpBinding binding;
+    private boolean isPasswordVisible = false;
+    private AuthRepository authRepository;
+    private AuthValidator.OnValidationError validationErrorCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this); // Kich hoat che do hien thi full man hinh
+        EdgeToEdge.enable(this);
 
         binding = ActivitySignUpBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot()); // Gan giao dien tu binding
+        setContentView(binding.getRoot());
 
-        // Kiem tra va cap nhat trang thai nut SignUp
+        authRepository = new AuthRepository(new FirebaseAuthDataSource());
+        validationErrorCallback = message -> binding.edtUserName.setError(message);
+
         checkActive();
-        // Xu ly su kien nhan text Login
         handleLogin();
-
-        // Xu ly su kien nhan nut SignUp
         handleSignup();
-
-        // Xu ly hien thi/an mat khau
         handleVisibilityToggle();
-
-        // Xu ly TextWatcher de kiem tra du lieu theo thoi gian thuc
         handleTextWatchers();
-
-        // Xu ly su kien thay doi trang thai checkbox
         handleCheckboxChange();
     }
 
-    // Kiem tra va cap nhat trang thai nut SignUp
     private void checkActive() {
         if (validateSignUp() && binding.checkBox.isChecked()) {
-            binding.btnSignup.setBackgroundResource(R.drawable.custom_bg_success); // Doi nen nut thanh mau thanh cong
-            binding.btnSignup.setEnabled(true); // Kich hoat nut
+            binding.btnSignup.setBackgroundResource(R.drawable.custom_bg_success);
+            binding.btnSignup.setEnabled(true);
         } else {
-            binding.btnSignup.setBackgroundResource(R.drawable.custom_bg_default); // Doi nen nut ve mac dinh
-            binding.btnSignup.setEnabled(false); // Vo hieu hoa nut
+            binding.btnSignup.setBackgroundResource(R.drawable.custom_bg_default);
+            binding.btnSignup.setEnabled(false);
         }
     }
 
-    // Xu ly su kien thay doi trang thai checkbox
     private void handleCheckboxChange() {
-        binding.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            checkActive(); // Kiem tra trang thai nut khi checkbox thay doi
-        });
+        binding.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> checkActive());
     }
 
-    // Xu ly su kien nhan nut SignUp
     private void handleSignup() {
         binding.btnSignup.setOnClickListener(v -> {
             checkActive();
             if (validateSignUp()) {
-                Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
-                startActivity(intent); // Chuyen sang man hinh dang nhap
-                finish(); // Dong activity dang ky
+                String email = binding.edtUserName.getText().toString().trim();
+                String password = binding.edtPassword.getText().toString().trim();
+
+                authRepository.createUserWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                String userId = authRepository.getCurrentUser().getUid();
+                                authRepository.saveUserToDatabase(userId, email)
+                                        .addOnSuccessListener(aVoid -> {
+                                            Log.d("SignUpActivity", "User data saved successfully");
+                                            Toast.makeText(SignUpActivity.this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
+                                            Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
+                                            startActivity(intent);
+                                            finish();
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Log.e("SignUpActivity", "Failed to save user data: " + e.getMessage(), e);
+                                            Toast.makeText(SignUpActivity.this, "Lỗi lưu thông tin: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                        });
+                            } else {
+                                Toast.makeText(SignUpActivity.this,
+                                        "Đăng ký không thành công: " + task.getException().getMessage(),
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
             }
         });
     }
 
-    // Xu ly su kien nhan text Login
     private void handleLogin() {
         binding.txtLogin.setOnClickListener(v -> {
             Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
-            startActivity(intent); // Chuyen sang man hinh dang nhap
-            finish(); // Dong activity dang ky
+            startActivity(intent);
+            finish();
         });
     }
 
-    // Xu ly hien thi/an mat khau va xac nhan mat khau
     private void handleVisibilityToggle() {
-        // Toggle for password visibility
         binding.visibilityOffIcon.setOnClickListener(v -> {
             if (isPasswordVisible) {
-                binding.edtPassword.setTransformationMethod(new PasswordTransformationMethod()); // An mat khau
-                binding.visibilityOffIcon.setImageResource(R.drawable.visibility_off); // Doi icon
+                binding.edtPassword.setTransformationMethod(new PasswordTransformationMethod());
+                binding.visibilityOffIcon.setImageResource(R.drawable.visibility_off);
             } else {
-                binding.edtPassword.setTransformationMethod(null); // Hien mat khau
-                binding.visibilityOffIcon.setImageResource(R.drawable.visibility_on); // Doi icon
+                binding.edtPassword.setTransformationMethod(null);
+                binding.visibilityOffIcon.setImageResource(R.drawable.visibility_on);
             }
-
-            binding.edtPassword.setSelection(binding.edtPassword.getText().length()); // Dat con tro cuoi dong
-
-            isPasswordVisible = !isPasswordVisible; // Dao trang thai hien thi
+            binding.edtPassword.setSelection(binding.edtPassword.getText().length());
+            isPasswordVisible = !isPasswordVisible;
         });
 
-        // Toggle for confirm password visibility
         binding.confirmVisibilityOffIcon.setOnClickListener(v -> {
             if (isConfirmPasswordVisible) {
-                binding.edtConfirmPassword.setTransformationMethod(new PasswordTransformationMethod()); // An xac nhan mat khau
-                binding.confirmVisibilityOffIcon.setImageResource(R.drawable.visibility_off); // Doi icon
+                binding.edtConfirmPassword.setTransformationMethod(new PasswordTransformationMethod());
+                binding.confirmVisibilityOffIcon.setImageResource(R.drawable.visibility_off);
             } else {
-                binding.edtConfirmPassword.setTransformationMethod(null); // Hien xac nhan mat khau
-                binding.confirmVisibilityOffIcon.setImageResource(R.drawable.visibility_on); // Doi icon
+                binding.edtConfirmPassword.setTransformationMethod(null);
+                binding.confirmVisibilityOffIcon.setImageResource(R.drawable.visibility_on);
             }
-
-            binding.edtConfirmPassword.setSelection(binding.edtConfirmPassword.getText().length()); // Dat con tro cuoi dong
-
-            isConfirmPasswordVisible = !isConfirmPasswordVisible; // Dao trang thai hien thi
+            binding.edtConfirmPassword.setSelection(binding.edtConfirmPassword.getText().length());
+            isConfirmPasswordVisible = !isConfirmPasswordVisible;
         });
     }
 
-    // Kiem tra tinh hop le cua thong tin dang ky
     private boolean validateSignUp() {
-        String username = binding.edtUserName.getText().toString().trim();
+        String email = binding.edtUserName.getText().toString().trim();
         String password = binding.edtPassword.getText().toString().trim();
-        String confirmpassword = binding.edtConfirmPassword.getText().toString().trim();
+        String confirmPassword = binding.edtConfirmPassword.getText().toString().trim();
 
-        if (username.isEmpty()) {
-            binding.edtUserName.setError("Please enter username or email");
-            return false;
-        }
-
-        String emailRegex = "^[a-z0-9._%+-]+@[a-z.-]+\\.[a-z]{2,}$"; // Bieu thuc chinh quy kiem tra email
-        if (!username.matches(emailRegex)) {
-            binding.edtUserName.setError("Invalid email format");
-            return false;
-        }
-
-        if (password.isEmpty()) {
-            binding.edtPassword.setError("Please enter password");
-            return false;
-        }
-
-        if (password.length() < 8) {
-            binding.edtPassword.setError("Password must be at least 8 characters long");
-            return false;
-        }
-
-        if (confirmpassword.isEmpty()) {
-            binding.edtConfirmPassword.setError("Please enter confirm password");
-            return false;
-        }
-
-        if (confirmpassword.length() < 8) {
-            binding.edtConfirmPassword.setError("Confirm Password must be at least 8 characters long");
-            return false;
-        }
-
-        if (!password.equals(confirmpassword)) {
-            binding.edtConfirmPassword.setError("Passwords do not match");
-            return false;
-        }
-
-        return true; // Thong tin hop le
+        return AuthValidator.validateEmail(email, message -> binding.edtUserName.setError(message)) &&
+                AuthValidator.validatePassword(password, message -> binding.edtPassword.setError(message)) &&
+                AuthValidator.validateConfirmPassword(password, confirmPassword, message -> binding.edtConfirmPassword.setError(message));
     }
 
-    // Xu ly TextWatcher de kiem tra du lieu theo thoi gian thuc
     private void handleTextWatchers() {
         binding.edtUserName.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-            }
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                checkActive(); // Kiem tra trang thai nut khi nhap username
+                checkActive();
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-            }
+            public void afterTextChanged(Editable editable) {}
         });
 
         binding.edtPassword.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-            }
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                checkActive(); // Kiem tra trang thai nut khi nhap password
+                checkActive();
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-            }
+            public void afterTextChanged(Editable editable) {}
         });
 
         binding.edtConfirmPassword.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-            }
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                checkActive(); // Kiem tra trang thai nut khi nhap xac nhan mat khau
+                checkActive();
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-            }
+            public void afterTextChanged(Editable editable) {}
         });
     }
 }

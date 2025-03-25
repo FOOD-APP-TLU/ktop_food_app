@@ -14,7 +14,7 @@
 
     <style name="CategoryImageBorder">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">18%</item>
+        <item name="cornerSize">30%</item>
         <item name="strokeColor">#B0C4DE</item>
         <item name="strokeWidth">2dp</item>
     </style>

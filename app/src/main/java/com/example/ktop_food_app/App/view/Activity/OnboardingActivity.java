@@ -3,19 +3,33 @@ package com.example.ktop_food_app.App.view.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
 
-import com.example.ktop_food_app.App.model.Data.Firebase.FirebaseActivity;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.ktop_food_app.App.view.Activity.Auth.LoginActivity;
 import com.example.ktop_food_app.App.view.Activity.Auth.SignUpActivity;
 import com.example.ktop_food_app.databinding.ActivityOnboardingBinding;
+import com.google.firebase.auth.FirebaseAuth;
 
-public class OnboardingActivity extends FirebaseActivity {
-    ActivityOnboardingBinding binding;
+public class OnboardingActivity extends AppCompatActivity {
+    private ActivityOnboardingBinding binding;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Khởi tạo Firebase Authentication
+        mAuth = FirebaseAuth.getInstance();
+
+        // Kiểm tra nếu người dùng đã đăng nhập
+        if (mAuth.getCurrentUser() != null) {
+            Intent intent = new Intent(OnboardingActivity.this, HomeActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         binding = ActivityOnboardingBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -24,22 +38,16 @@ public class OnboardingActivity extends FirebaseActivity {
     }
 
     private void setVariable() {
-        binding.btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(OnboardingActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
-            }
+        binding.btnLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(OnboardingActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
         });
 
-        binding.btnSignup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(OnboardingActivity.this, SignUpActivity.class);
-                startActivity(intent);
-                finish();
-            }
+        binding.btnSignup.setOnClickListener(v -> {
+            Intent intent = new Intent(OnboardingActivity.this, SignUpActivity.class);
+            startActivity(intent);
+            finish();
         });
     }
 }
