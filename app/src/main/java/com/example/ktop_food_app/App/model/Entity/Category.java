@@ -1,6 +1,8 @@
 package com.example.ktop_food_app.App.model.Entity;
 
-public class Category {
+import java.io.Serializable;
+
+public class Category implements Serializable {
     private int id;
     private String name;
     private int img;

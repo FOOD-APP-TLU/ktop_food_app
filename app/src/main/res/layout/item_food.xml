@@ -5,7 +5,8 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     android:background="@drawable/custom_bg_food_home"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:elevation="4dp">
 
     <!-- Food image -->
     <com.google.android.material.imageview.ShapeableImageView
