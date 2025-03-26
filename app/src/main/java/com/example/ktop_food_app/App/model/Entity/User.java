@@ -5,16 +5,16 @@ public class User {
     private int img; // Luu resource id cua anh
     private String name;
     private String email;
-    private String number;
+    private String phone;
     private String address;
 
     // Cap nhat constructor de them truong id
-    public User(int id, int img, String name, String email, String number, String address) {
+    public User(int id, int img, String name, String email, String phone, String address) {
         this.id = id;
         this.img = img;
         this.name = name;
         this.email = email;
-        this.number = number;
+        this.phone = phone;
         this.address = address;
     }
 
@@ -52,12 +52,12 @@ public class User {
         this.email = email;
     }
 
-    public String getNumber() {
-        return number;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setNumber(String number) {
-        this.number = number;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getAddress() {

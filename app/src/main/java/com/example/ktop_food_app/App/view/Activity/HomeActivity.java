@@ -63,7 +63,7 @@ public class HomeActivity extends AppCompatActivity {
         handleLogoutButton();
         handleProfileImage();
         handleCartButton();
-        loadProfileImage(); // Gọi hàm này để tải avatar từ Realtime Database
+        loadProfileImage();
     }
 
     // Cập nhật hàm loadProfileImage để lấy URL avatar từ Realtime Database và dùng Glide
@@ -137,7 +137,8 @@ public class HomeActivity extends AppCompatActivity {
         binding.navView.setNavigationItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_profile) {
-                Toast.makeText(this, "Navigating to Edit Profile Activity", Toast.LENGTH_SHORT).show();
+               Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
+               startActivity(intent);
             } else if (itemId == R.id.nav_track_order) {
                 Toast.makeText(this, "Navigating to Track Order Activity", Toast.LENGTH_SHORT).show();
             } else if (itemId == R.id.nav_order_history) {
@@ -149,8 +150,13 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void handleProfileImage() {
-        binding.home.imgUser.setOnClickListener(v ->
-                Toast.makeText(this, "Navigating to Profile Activity", Toast.LENGTH_SHORT).show());
+        binding.home.imgUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void handleCartButton() {
