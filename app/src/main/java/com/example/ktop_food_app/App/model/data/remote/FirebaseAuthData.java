@@ -50,11 +50,16 @@ public class FirebaseAuthData {
             put("displayName", "User_" + username);
             put("email", email);
             put("address", "chưa cập nhật");
-            put("avatar", "default_avatar_url");
+            put("avatar", "");
             put("phone", "chưa cập nhật");
         }});
         userData.put("cart", new ArrayList<>());
 
         return userRef.setValue(userData);
+    }
+
+    // Thêm phương thức để lấy DatabaseReference
+    public DatabaseReference getDatabaseReference() {
+        return FirebaseDatabase.getInstance(DATABASE_URL).getReference();
     }
 }
