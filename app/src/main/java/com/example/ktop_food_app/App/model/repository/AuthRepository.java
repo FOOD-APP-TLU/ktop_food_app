@@ -3,6 +3,7 @@ package com.example.ktop_food_app.App.model.repository;
 import com.example.ktop_food_app.App.model.data.remote.FirebaseAuthData;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
 
 public class AuthRepository {
     private final FirebaseAuthData authDataSource;
@@ -35,5 +36,10 @@ public class AuthRepository {
     // Lưu thông tin user vào Realtime Database
     public Task saveUserToDatabase(String userId, String email) {
         return authDataSource.saveUserToDatabase(userId, email);
+    }
+
+    // Thêm phương thức để lấy DatabaseReference
+    public DatabaseReference getDatabaseReference() {
+        return authDataSource.getDatabaseReference();
     }
 }

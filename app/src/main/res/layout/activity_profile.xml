@@ -47,19 +47,36 @@
         android:orientation="vertical"
         tools:layout_editor_absoluteX="-16dp">
 
+        <!-- Sử dụng FrameLayout để chồng lấp biểu tượng chỉnh sửa lên ảnh đại diện -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
-        <!-- User image -->
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/img_user"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_alignParentEnd="true"
-            android:clickable="true"
-            android:contentDescription="User Profile"
-            android:focusable="true"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/UserImageBorder"
-            tools:ignore="TouchTargetSizeCheck" />
+            <!-- User image -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/img_user"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:clickable="true"
+                android:contentDescription="User Profile"
+                android:focusable="true"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/UserImageBorder"
+                tools:ignore="TouchTargetSizeCheck" />
+
+            <!-- Biểu tượng chỉnh sửa -->
+            <ImageView
+                android:id="@+id/edit_icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/circle_background"
+                android:contentDescription="Edit Profile Picture"
+                android:padding="4dp"
+                android:src="@drawable/ic_edit_img"
+               />
+
+        </FrameLayout>
 
     </LinearLayout>
 
@@ -72,22 +89,6 @@
         android:orientation="vertical">
 
         <EditText
-            android:id="@+id/edt_username"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:autofillHints=""
-            android:background="@drawable/custom_bg_txt"
-            android:ems="10"
-            android:fontFamily="@font/annapurna_sil"
-            android:hint="Enter your username "
-            android:inputType="text"
-            android:paddingLeft="16dp"
-            android:textColor="@color/text_color_secondary"
-            android:textColorHint="#80B57E35"
-            android:textSize="16sp" />
-
-        <EditText
             android:id="@+id/edt_email"
             android:layout_width="match_parent"
             android:layout_height="48dp"
@@ -97,6 +98,22 @@
             android:ems="10"
             android:fontFamily="@font/annapurna_sil"
             android:hint="Enter your email"
+            android:inputType="text"
+            android:paddingLeft="16dp"
+            android:textColorHint="#80B57E35"
+            android:textSize="16sp"
+            android:textColor="@color/text_color_secondary"/>
+
+        <EditText
+            android:id="@+id/edt_username"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:autofillHints=""
+            android:background="@drawable/custom_bg_txt"
+            android:ems="10"
+            android:fontFamily="@font/annapurna_sil"
+            android:hint="Enter your username "
             android:inputType="text"
             android:paddingLeft="16dp"
             android:textColor="@color/text_color_secondary"
