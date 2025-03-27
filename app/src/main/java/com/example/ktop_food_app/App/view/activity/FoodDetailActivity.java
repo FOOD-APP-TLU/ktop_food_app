@@ -1,6 +1,7 @@
 package com.example.ktop_food_app.App.view.activity;
 
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -34,6 +35,9 @@ public class FoodDetailActivity extends AppCompatActivity {
             updateTotalPrice();
         }
 
+        // nut btnBack
+        binding.btnBack.setOnClickListener(v -> finish());
+
         // Xử lý tăng số lượng
         binding.btnIncrease.setOnClickListener(v -> {
             quantity++;
@@ -53,6 +57,7 @@ public class FoodDetailActivity extends AppCompatActivity {
         // Xử lý thêm vào giỏ hàng
         binding.addToCart.setOnClickListener(v -> {
             // Code xử lý thêm vào giỏ hàng
+            Toast.makeText(FoodDetailActivity.this, "Thêm vào giỏ hàng thành công", Toast.LENGTH_SHORT).show();
         });
     }
 

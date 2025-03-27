@@ -25,7 +25,7 @@ public class DataGenerator {
         Category more = new Category(8, "More", R.drawable.more_icon);
 
         // Them du lieu mon an
-        foods.add(new Food(1, "Bolognese", "Italian pasta with tomato sauce and cheese", 45000, 4.8f, "10-15min", R.drawable.bolognese, spaghetti));
+        foods.add(new Food(1, "Bolognese", "Italian pasta with tomato sauce and cheese Italian pasta with tomato sauce and cheese Italian pasta with tomato sauce and cheese", 45000, 4.8f, "10-15min", R.drawable.bolognese, spaghetti));
         foods.add(new Food(2, "Fried Chicken", "Grilled chicken with special seasoning", 40000, 4.9f, "15-20min", R.drawable.friedchickend, chicken));
         foods.add(new Food(3, "Beef Lasagna", "Juicy beef patty with fresh vegetables and sauce", 25000, 4.7f, "10-15min", R.drawable.beeflasagma, humburger));
         foods.add(new Food(4, "Veggiei Pizza", "Classic hotdog with ketchup and mustard", 50000, 4.6f, "10-15min", R.drawable.veggieipizza, pizza));
