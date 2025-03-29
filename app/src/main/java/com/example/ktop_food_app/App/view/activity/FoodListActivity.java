@@ -1,98 +1,105 @@
 package com.example.ktop_food_app.App.view.activity;
 
-// Import thu vien can thiet
-
-import android.os.Build;
 import android.os.Bundle;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.ktop_food_app.App.model.data.entity.Category;
 import com.example.ktop_food_app.App.model.data.entity.Food;
-import com.example.ktop_food_app.App.model.data.local.DataGenerator;
 import com.example.ktop_food_app.App.view.adapter.FoodAdapter;
+import com.example.ktop_food_app.App.viewmodel.FoodViewModel;
 import com.example.ktop_food_app.R;
-
+import com.example.ktop_food_app.databinding.ActivityFoodListBinding;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-// Lop FoodListActivity ke thua AppCompatActivity
 public class FoodListActivity extends AppCompatActivity {
-    private RecyclerView recyclerView; // RecyclerView de hien thi danh sach mon an
-    private FoodAdapter foodAdapter; // Adapter quan ly du lieu RecyclerView
-    private Category category; // Danh muc duoc chon
+    private ActivityFoodListBinding binding; // ViewBinding
+    private FoodAdapter foodAdapter;
+    private Category category;
+    private FoodViewModel foodViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_food_list); // Gan layout cho activity
+        binding = ActivityFoodListBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        recyclerView = findViewById(R.id.recyclerView); // Lay RecyclerView tu layout
-        TextView title = findViewById(R.id.txtCategoryTitle); // Lay TextView de hien thi ten danh muc
+        initView();
+        getCategoryFromIntent();
+        setupRecyclerView();
+        setupViewModel();
+        setupListeners();
+    }
 
-        // Nhan du lieu danh muc tu Intent
+    private void initView() {
+        binding.txtCategoryTitle.setText(""); // Để tránh lỗi null khi chưa nhận dữ liệu
+    }
+
+    private void getCategoryFromIntent() {
         Object serializableExtra = getIntent().getSerializableExtra("category");
-        category = (Category) serializableExtra; // Ep kieu thanh Category
+        if (serializableExtra instanceof Category) {
+            category = (Category) serializableExtra;
+            binding.txtCategoryTitle.setText(category.getName());
+        }
+    }
 
-        title.setText(category.getName()); // Hien thi ten danh muc
+    private void setupRecyclerView() {
+        binding.recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        foodAdapter = new FoodAdapter(this, new ArrayList<>());
+        binding.recyclerView.setAdapter(foodAdapter);
+        binding.recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, 16, true));
+    }
 
-        // Loc danh sach mon an theo danh muc
-        List<Food> filteredFoods = new ArrayList<>(); // Tao danh sach rong
+    private void setupViewModel() {
+        foodViewModel = new ViewModelProvider(this).get(FoodViewModel.class);
+        foodViewModel.getFoodListLiveData().observe(this, this::updateFoodList);
+        foodViewModel.getErrorMessage().observe(this, errorMessage ->
+                Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+        );
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { // API >= 24, dung Stream de loc
-            filteredFoods = DataGenerator.generateSampleFoods().stream()
-                    .filter(food -> food.getCategory() != null && food.getCategory().getName().equals(category.getName()))
-                    .collect(Collectors.toList());
-        } else { // API < 24, dung vong lap de loc
-            for (Food food : DataGenerator.generateSampleFoods()) {
-                if (food.getCategory() != null && food.getCategory().getName().equals(category.getName())) {
+    private void updateFoodList(List<Food> foodList) {
+        if (foodList != null) {
+            List<Food> filteredFoods = new ArrayList<>();
+            for (Food food : foodList) {
+                if (food.getCategoryId() == category.getId()) {
                     filteredFoods.add(food);
                 }
             }
+            foodAdapter.updateData(filteredFoods);
         }
+    }
 
-        // Nut back
-        ImageView btnBack = findViewById(R.id.btnBack); // Lay nut back
-        btnBack.setOnClickListener(v -> finish()); // Click de quay lai man hinh truoc
+    private void setupListeners() {
+        binding.btnBack.setOnClickListener(v -> finish());
 
-        // Cau hinh RecyclerView
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 2)); // Thiet lap luoi 2 cot
-        foodAdapter = new FoodAdapter(this, filteredFoods); // Khoi tao adapter
-        recyclerView.setAdapter(foodAdapter); // Gan adapter cho RecyclerView
-
-        // Thay doi layout_width cua item
-        recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+        binding.recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
-            public void onChildViewAttachedToWindow(android.view.View view) { // Khi item duoc gan vao
+            public void onChildViewAttachedToWindow(android.view.View view) {
                 ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-                layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT; // Dat width thanh match_parent
+                layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
                 view.setLayoutParams(layoutParams);
             }
 
             @Override
-            public void onChildViewDetachedFromWindow(android.view.View view) { // Khi item bi go bo
-                // Khong xu ly
+            public void onChildViewDetachedFromWindow(android.view.View view) {
+                // Không xử lý gì
             }
         });
-
-        // Them khoang cach giua cac item
-        recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, 16, true));
     }
 
-    // Lop tao khoang cach giua cac item
+    // Lớp tạo khoảng cách giữa các item
     public static class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
-        private final int spanCount; // So cot
-        private final int spacing; // Khoang cach (dp)
-        private final boolean includeEdge; // Tinh ca vien ngoai
+        private final int spanCount;
+        private final int spacing;
+        private final boolean includeEdge;
 
-        public GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) { // Khoi tao
+        public GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) {
             this.spanCount = spanCount;
             this.spacing = spacing;
             this.includeEdge = includeEdge;
@@ -100,19 +107,19 @@ public class FoodListActivity extends AppCompatActivity {
 
         @Override
         public void getItemOffsets(@NonNull android.graphics.Rect outRect, @NonNull android.view.View view,
-                                   @NonNull RecyclerView parent, @NonNull RecyclerView.State state) { // Tinh khoang cach
-            int position = parent.getChildAdapterPosition(view); // Lay vi tri item
-            int column = position % spanCount; // Tinh cot
+                                   @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+            int position = parent.getChildAdapterPosition(view);
+            int column = position % spanCount;
 
-            if (includeEdge) { // Tinh ca vien ngoai
-                outRect.left = spacing - column * spacing / spanCount; // Khoang cach trai
-                outRect.right = (column + 1) * spacing / spanCount; // Khoang cach phai
-                if (position < spanCount) outRect.top = spacing; // Khoang cach tren (hang dau)
-                outRect.bottom = spacing; // Khoang cach duoi
-            } else { // Khong tinh vien ngoai
-                outRect.left = column * spacing / spanCount; // Khoang cach trai
-                outRect.right = spacing - (column + 1) * spacing / spanCount; // Khoang cach phai
-                if (position >= spanCount) outRect.top = spacing; // Khoang cach tren (tu hang 2)
+            if (includeEdge) {
+                outRect.left = spacing - column * spacing / spanCount;
+                outRect.right = (column + 1) * spacing / spanCount;
+                if (position < spanCount) outRect.top = spacing;
+                outRect.bottom = spacing;
+            } else {
+                outRect.left = column * spacing / spanCount;
+                outRect.right = spacing - (column + 1) * spacing / spanCount;
+                if (position >= spanCount) outRect.top = spacing;
             }
         }
     }

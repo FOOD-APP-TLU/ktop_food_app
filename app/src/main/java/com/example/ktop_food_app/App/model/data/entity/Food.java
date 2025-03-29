@@ -3,55 +3,100 @@ package com.example.ktop_food_app.App.model.data.entity;
 import java.io.Serializable;
 
 public class Food implements Serializable {
-    private final int id;
-    private final String name;
-    private final String description;
-    private final int price;
-    private final float rate;
-    private final String time;
-    private final int img;
-    private final Category category;
+    private String FoodId;
+    private String Title;
+    private String Description;
+    private int Price;
+    private float Star;
+    private String TimeValue;
+    private String ImagePath;
+    private int CategoryId;
+    private boolean BestFood;
 
-    public Food(int id, String name, String description, int price, float rate, String time, int img, Category category) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.rate = rate;
-        this.time = time;
-        this.img = img;
-        this.category = category;
+    public Food() {
     }
 
-    public int getId() {
-        return id;
+    public Food(String foodId, String title, String description, int price, float star, String timeValue, int categoryId, String imagePath, boolean bestFood) {
+        FoodId = foodId;
+        Title = title;
+        Description = description;
+        Price = price;
+        Star = star;
+        TimeValue = timeValue;
+        CategoryId = categoryId;
+        ImagePath = imagePath;
+        BestFood = bestFood;
     }
 
-    public String getName() {
-        return name;
+    public String getFoodId() {
+        return FoodId;
     }
 
-    public String getDescription() {
-        return description;
+    public void setFoodId(String foodId) {
+        FoodId = foodId;
+    }
+
+    public String getTitle() {
+        return Title;
+    }
+
+    public void setTitle(String title) {
+        Title = title;
     }
 
     public int getPrice() {
-        return price;
+        return Price;
     }
 
-    public float getRate() {
-        return rate;
+    public void setPrice(int price) {
+        Price = price;
     }
 
-    public String getTime() {
-        return time;
+    public String getDescription() {
+        return Description;
     }
 
-    public int getImg() {
-        return img;
+    public void setDescription(String description) {
+        Description = description;
     }
 
-    public Category getCategory() {
-        return category;
+    public float getStar() {
+        return Star;
+    }
+
+    public void setStar(float star) {
+        Star = star;
+    }
+
+    public String getTimeValue() {
+        return TimeValue;
+    }
+
+    public void setTimeValue(String timeValue) {
+        TimeValue = timeValue;
+    }
+
+    public int getCategoryId() {
+        return CategoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        CategoryId = categoryId;
+    }
+
+    public String getImagePath() {
+        return ImagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        ImagePath = imagePath;
+    }
+
+    public boolean isBestFood() {
+        return BestFood;
+    }
+
+    public void setBestFood(boolean bestFood) {
+        BestFood = bestFood;
     }
 }

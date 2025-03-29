@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.ktop_food_app.App.model.data.entity.Food;
 import com.example.ktop_food_app.App.view.activity.FoodDetailActivity;
 import com.example.ktop_food_app.databinding.ItemFoodBinding;
@@ -62,6 +63,11 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         return foodList.size();
     }
 
+    public void updateData(List<Food> newList) {
+        foodList = newList;
+        notifyDataSetChanged();
+    }
+
     // ViewHolder de giu cac view cua moi item trong RecyclerView
     public static class FoodViewHolder extends RecyclerView.ViewHolder {
         // Binding cho layout item_food.xml
@@ -78,14 +84,13 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         // Phuong thuc gan du lieu vao cac view
         public void bind(Food food) {
             // Gan ten mon an
-            binding.txtFoodName.setText(food.getName());
+            binding.txtFoodName.setText(food.getTitle());
             // Gan gia mon an, dinh dang voi don vi "d"
             binding.txtFoodPrice.setText(String.format("%d d", food.getPrice()));
             // Gan thoi gian chuan bi
-            binding.txtFoodTime.setText(food.getTime());
+            binding.txtFoodTime.setText(food.getTimeValue());
             // Gan hinh anh mon an
-            binding.imgFood.setImageResource(food.getImg());
-
+            Glide.with(context).load(food.getImagePath()).into(binding.imgFood);
             // Xu ly su kien click tren item
             binding.getRoot().setOnClickListener(v -> {
                 Intent intent = new Intent(context, FoodDetailActivity.class);
