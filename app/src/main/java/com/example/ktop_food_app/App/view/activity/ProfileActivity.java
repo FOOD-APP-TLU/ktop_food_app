@@ -1,23 +1,66 @@
 package com.example.ktop_food_app.App.view.activity;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.ktop_food_app.App.model.data.entity.User;
-import com.example.ktop_food_app.App.model.repository.UserRepository;
+import com.bumptech.glide.Glide;
+import com.example.ktop_food_app.App.model.data.remote.FirebaseAuthData;
+import com.example.ktop_food_app.App.model.repository.AuthRepository;
 import com.example.ktop_food_app.R;
 import com.example.ktop_food_app.databinding.ActivityProfileBinding;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 
-import java.util.List;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ProfileActivity extends AppCompatActivity {
     private ActivityProfileBinding binding;
-    private UserRepository userRepository;
+    private AuthRepository authRepository;
+    private DatabaseReference mDatabase;
+    private String currentUserId;
+
+    // Lưu trữ dữ liệu ban đầu từ cơ sở dữ liệu
+    private String initialUsername;
+    private String initialPhone;
+    private String initialAddress;
+
+    // Lưu trữ chuỗi Base64 của ảnh mới (nếu có)
+    private String newAvatarBase64;
+
+    // ActivityResultLauncher để chọn ảnh
+    private final ActivityResultLauncher<String> pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    // Hiển thị ảnh đã chọn lên imgUser
+                    Glide.with(ProfileActivity.this)
+                            .load(uri)
+                            .placeholder(R.drawable.img_user)
+                            .error(R.drawable.img_user)
+                            .into(binding.imgUser);
+                    // Chuyển ảnh thành Base64 và lưu tạm
+                    convertImageToBase64(uri);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,28 +69,107 @@ public class ProfileActivity extends AppCompatActivity {
         binding = ActivityProfileBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        userRepository = new UserRepository(); // Khởi tạo repository
+        // Khởi tạo AuthRepository
+        authRepository = new AuthRepository(new FirebaseAuthData());
+        mDatabase = authRepository.getDatabaseReference();
 
-        LoadUserData(); // Tải dữ liệu người dùng
-        setEditProfileButtonDefault(); // Đặt nút Edit Profile về trạng thái mặc định
-        handleTextWatchers(); // Xử lý sự kiện thay đổi text
-        handleBackIcon(); // Xử lý nút Back
-        handleEditProfileButton(); // Xử lý nút Edit Profile
+        // Kiểm tra người dùng hiện tại
+        FirebaseUser currentUser = authRepository.getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        currentUserId = currentUser.getUid();
+
+        // Đặt edtEmail thành chỉ đọc
+        binding.edtEmail.setEnabled(false);
+
+        // Xử lý sự kiện nhấn vào ảnh đại diện
+        binding.imgUser.setOnClickListener(v -> pickImage());
+
+        // Các phương thức khởi tạo
+        loadUserData();
+        setEditProfileButtonDefault();
+        handleTextWatchers();
+        handleBackIcon();
+        handleEditProfileButton();
+    }
+
+    // Mở trình chọn ảnh
+    private void pickImage() {
+        pickImageLauncher.launch("image/*");
+    }
+
+    // Chuyển ảnh thành Base64 và lưu tạm vào biến newAvatarBase64
+    private void convertImageToBase64(Uri imageUri) {
+        try {
+            // Đọc ảnh từ URI thành Bitmap
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            inputStream.close();
+
+            // Nén ảnh để giảm kích thước
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, baos);
+            byte[] imageBytes = baos.toByteArray();
+
+            // Chuyển thành chuỗi Base64
+            newAvatarBase64 = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+
+            // Kích hoạt nút Edit Profile nếu có thay đổi
+            checkActive();
+        } catch (Exception e) {
+            Toast.makeText(this, "Lỗi khi xử lý ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     // Tải và hiển thị dữ liệu người dùng
-    private void LoadUserData() {
-        List<User> users = userRepository.getUserList();
-        if (!users.isEmpty()) {
-            User user = users.get(0);
-            binding.imgUser.setImageResource(user.getImg());
-            binding.edtUsername.setText(user.getName());
-            binding.edtEmail.setText(user.getEmail());
-            binding.edtPhone.setText(user.getPhone());
-            binding.edtAddress.setText(user.getAddress());
-        } else {
-            Toast.makeText(this, "No user data available", Toast.LENGTH_SHORT).show();
-        }
+    private void loadUserData() {
+        DatabaseReference userRef = mDatabase.child("users").child(currentUserId).child("profile");
+        userRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String displayName = snapshot.child("displayName").getValue(String.class);
+                    String email = snapshot.child("email").getValue(String.class);
+                    String phone = snapshot.child("phone").getValue(String.class);
+                    String address = snapshot.child("address").getValue(String.class);
+                    String avatarBase64 = snapshot.child("avatar").getValue(String.class);
+
+                    // Lưu trữ dữ liệu ban đầu
+                    initialUsername = displayName != null ? displayName : "Chưa cập nhật";
+                    initialPhone = phone != null ? phone : "Chưa cập nhật";
+                    initialAddress = address != null ? address : "Chưa cập nhật";
+
+                    // Cập nhật UI
+                    binding.edtUsername.setText(initialUsername);
+                    binding.edtEmail.setText(email != null ? email : "Chưa cập nhật");
+                    binding.edtPhone.setText(initialPhone);
+                    binding.edtAddress.setText(initialAddress);
+
+                    // Tải ảnh avatar từ Base64
+                    if (avatarBase64 != null && !avatarBase64.isEmpty()) {
+                        try {
+                            byte[] decodedBytes = Base64.decode(avatarBase64, Base64.DEFAULT);
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                            binding.imgUser.setImageBitmap(bitmap);
+                        } catch (Exception e) {
+                            binding.imgUser.setImageResource(R.drawable.img_user);
+                            Toast.makeText(ProfileActivity.this, "Lỗi hiển thị ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        binding.imgUser.setImageResource(R.drawable.img_user);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(ProfileActivity.this, "Lỗi tải dữ liệu: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // Đặt trạng thái mặc định cho nút Edit Profile
@@ -64,14 +186,62 @@ public class ProfileActivity extends AppCompatActivity {
     // Xử lý nút Edit Profile
     private void handleEditProfileButton() {
         binding.btnEditProfile.setOnClickListener(v -> {
-            Toast.makeText(this, "Save successful", Toast.LENGTH_SHORT).show();
-            setEditProfileButtonDefault();
+            if (validateEditProfile()) {
+                updateUserProfile();
+            }
         });
     }
 
-    // Kiểm tra và cập nhật trạng thái nút
+    // Cập nhật thông tin người dùng (bao gồm ảnh nếu có)
+    private void updateUserProfile() {
+        DatabaseReference userRef = mDatabase.child("users").child(currentUserId).child("profile");
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("displayName", binding.edtUsername.getText().toString().trim());
+        updates.put("phone", binding.edtPhone.getText().toString().trim());
+        updates.put("address", binding.edtAddress.getText().toString().trim());
+
+        // Nếu có ảnh mới, thêm vào updates
+        if (newAvatarBase64 != null) {
+            updates.put("avatar", newAvatarBase64);
+        }
+
+        userRef.updateChildren(updates)
+                .addOnSuccessListener(aVoid -> {
+                    // Cập nhật lại dữ liệu ban đầu sau khi lưu thành công
+                    initialUsername = binding.edtUsername.getText().toString().trim();
+                    initialPhone = binding.edtPhone.getText().toString().trim();
+                    initialAddress = binding.edtAddress.getText().toString().trim();
+
+                    Toast.makeText(this, "Cập nhật hồ sơ thành công", Toast.LENGTH_SHORT).show();
+                    setEditProfileButtonDefault();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Cập nhật hồ sơ thất bại", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    // Kiểm tra và kích hoạt nút Edit Profile
     private void checkActive() {
-        if (validateEditProfile()) {
+        // Kiểm tra dữ liệu hợp lệ
+        if (!validateEditProfile()) {
+            binding.btnEditProfile.setBackgroundResource(R.drawable.custom_bg_default);
+            binding.btnEditProfile.setEnabled(false);
+            return;
+        }
+
+        // Kiểm tra xem dữ liệu có thay đổi không
+        String currentUsername = binding.edtUsername.getText().toString().trim();
+        String currentPhone = binding.edtPhone.getText().toString().trim();
+        String currentAddress = binding.edtAddress.getText().toString().trim();
+
+        boolean hasTextChanged = !currentUsername.equals(initialUsername) ||
+                !currentPhone.equals(initialPhone) ||
+                !currentAddress.equals(initialAddress);
+
+        boolean hasAvatarChanged = newAvatarBase64 != null;
+
+        if (hasTextChanged || hasAvatarChanged) {
             binding.btnEditProfile.setBackgroundResource(R.drawable.custom_bg_success);
             binding.btnEditProfile.setEnabled(true);
         } else {
@@ -83,94 +253,53 @@ public class ProfileActivity extends AppCompatActivity {
     // Xác thực dữ liệu nhập
     private boolean validateEditProfile() {
         String username = binding.edtUsername.getText().toString().trim();
-        String email = binding.edtEmail.getText().toString().trim();
         String phone = binding.edtPhone.getText().toString().trim();
         String address = binding.edtAddress.getText().toString().trim();
 
+        // Kiểm tra username
         if (username.isEmpty()) {
-            binding.edtUsername.setError("Please enter username");
+            binding.edtUsername.setError("Vui lòng nhập tên");
             return false;
+        } else {
+            binding.edtUsername.setError(null);
         }
-        String emailRegex = "^[a-z0-9._%+-]+@[a-z.-]+\\.[a-z]{2,}$";
-        if (!email.matches(emailRegex)) {
-            binding.edtEmail.setError("Invalid email format");
-            return false;
-        }
-        if (email.isEmpty()) {
-            binding.edtEmail.setError("Please enter email");
-            return false;
-        }
+
+        // Kiểm tra phone
         if (phone.isEmpty()) {
-            binding.edtPhone.setError("Please enter phone");
+            binding.edtPhone.setError("Vui lòng nhập số điện thoại");
             return false;
+        } else {
+            binding.edtPhone.setError(null);
         }
+
+        // Kiểm tra address
         if (address.isEmpty()) {
-            binding.edtAddress.setError("Please enter address");
+            binding.edtAddress.setError("Vui lòng nhập địa chỉ");
             return false;
+        } else {
+            binding.edtAddress.setError(null);
         }
+
         return true;
     }
 
     // Xử lý sự kiện thay đổi text
     private void handleTextWatchers() {
-        binding.edtUsername.addTextChangedListener(new TextWatcher() {
+        TextWatcher textWatcher = new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
                 checkActive();
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
+            public void afterTextChanged(Editable s) {}
+        };
 
-        binding.edtEmail.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                checkActive();
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-
-        binding.edtPhone.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                checkActive();
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-
-        binding.edtAddress.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-                checkActive();
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
+        binding.edtUsername.addTextChangedListener(textWatcher);
+        binding.edtPhone.addTextChangedListener(textWatcher);
+        binding.edtAddress.addTextChangedListener(textWatcher);
     }
 }

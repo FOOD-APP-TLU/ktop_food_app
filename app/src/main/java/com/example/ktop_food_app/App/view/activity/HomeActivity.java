@@ -1,7 +1,10 @@
 package com.example.ktop_food_app.App.view.activity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Toast;
 
@@ -9,9 +12,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.bumptech.glide.Glide;
 import com.example.ktop_food_app.App.model.data.entity.Category;
 import com.example.ktop_food_app.App.model.data.entity.Food;
+import com.example.ktop_food_app.App.model.data.remote.FirebaseAuthData;
+import com.example.ktop_food_app.App.model.repository.AuthRepository;
 import com.example.ktop_food_app.App.model.repository.CategoryRepository;
 import com.example.ktop_food_app.App.model.repository.FoodRepository;
 import com.example.ktop_food_app.App.view.activity.Auth.LoginActivity;
@@ -25,7 +29,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -39,18 +42,34 @@ public class HomeActivity extends AppCompatActivity {
     private CategoryRepository categoryRepository;
     private FoodAdapter foodAdapter;
     private CategoryAdapter categoryAdapter;
-    private FirebaseAuth mAuth;
     private List<Food> allFoods = new ArrayList<>();
+    private AuthRepository authRepository;
+    private DatabaseReference mDatabase;
+    private String currentUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mAuth = FirebaseAuth.getInstance();
 
         binding = ActivityNavHomeBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         headerBinding = NavHeaderBinding.bind(binding.navView.getHeaderView(0));
+
+        // Khởi tạo AuthRepository
+        authRepository = new AuthRepository(new FirebaseAuthData());
+        mDatabase = authRepository.getDatabaseReference();
+
+        // Kiểm tra người dùng hiện tại
+        FirebaseUser currentUser = authRepository.getCurrentUser();
+        if (currentUser == null) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
+        currentUserId = currentUser.getUid();
 
         foodRepository = new FoodRepository();
         categoryRepository = new CategoryRepository();
@@ -67,47 +86,37 @@ public class HomeActivity extends AppCompatActivity {
         loadProfileImage();
     }
 
-    // Cập nhật hàm loadProfileImage để lấy URL avatar từ Realtime Database và dùng Glide
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Tải lại ảnh đại diện mỗi khi activity được quay lại
+        loadProfileImage();
+    }
+
+    // Cập nhật hàm loadProfileImage để lấy chuỗi Base64 từ Realtime Database và hiển thị
     private void loadProfileImage() {
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser == null) {
-            // Nếu user chưa đăng nhập, chuyển về LoginActivity
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-            finish();
-            return;
-        }
+        DatabaseReference userRef = mDatabase.child("users").child(currentUserId).child("profile").child("avatar");
 
-        // Lấy UID của user hiện tại
-        String uid = currentUser.getUid();
-        String databaseUrl = "https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app";
-        DatabaseReference userRef = FirebaseDatabase.getInstance(databaseUrl)
-                .getReference("users")
-                .child(uid)
-                .child("profile")
-                .child("avatar");
-
-        // Đọc dữ liệu từ Realtime Database
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String avatarUrl = dataSnapshot.getValue(String.class);
-                if (avatarUrl != null && !avatarUrl.isEmpty()) {
-                    // Sử dụng Glide để tải ảnh từ URL vào ImageView
-                    Glide.with(HomeActivity.this)
-                            .load(avatarUrl)
-                            .placeholder(R.drawable.img_user) // Ảnh mặc định khi đang tải
-                            .error(R.drawable.img_user)       // Ảnh mặc định nếu lỗi
-                            .into(binding.home.imgUser);
+                String avatarBase64 = dataSnapshot.getValue(String.class);
+                if (avatarBase64 != null && !avatarBase64.isEmpty()) {
+                    try {
+                        byte[] decodedBytes = Base64.decode(avatarBase64, Base64.DEFAULT);
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                        binding.home.imgUser.setImageBitmap(bitmap);
+                    } catch (Exception e) {
+                        binding.home.imgUser.setImageResource(R.drawable.img_user);
+                        Toast.makeText(HomeActivity.this, "Lỗi hiển thị ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    // Nếu không có avatar, dùng ảnh mặc định
                     binding.home.imgUser.setImageResource(R.drawable.img_user);
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // Xử lý lỗi nếu không đọc được dữ liệu
                 Toast.makeText(HomeActivity.this, "Lỗi tải avatar: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                 binding.home.imgUser.setImageResource(R.drawable.img_user);
             }
@@ -121,7 +130,8 @@ public class HomeActivity extends AppCompatActivity {
 
     private void handleLogoutButton() {
         binding.logoutButton.setOnClickListener(v -> {
-            mAuth.signOut();
+            authRepository.getCurrentUser();
+            FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -139,7 +149,7 @@ public class HomeActivity extends AppCompatActivity {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_profile) {
                 Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
-                startActivity(intent);
+                startActivity(intent); // Sử dụng startActivity
             } else if (itemId == R.id.nav_track_order) {
                 Toast.makeText(this, "Navigating to Track Order Activity", Toast.LENGTH_SHORT).show();
             } else if (itemId == R.id.nav_order_history) {
@@ -155,7 +165,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
-                startActivity(intent);
+                startActivity(intent); // Sử dụng startActivity
             }
         });
     }
