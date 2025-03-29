@@ -50,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/annapurna_sil"
-                android:text="2 * 80,000 đ"
+                android:text="80,000 đ"
                 android:textColor="#666666"
                 android:textSize="14sp" />
 

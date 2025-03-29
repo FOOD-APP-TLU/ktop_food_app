@@ -7,12 +7,14 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.bumptech.glide.Glide;
 import com.example.ktop_food_app.App.model.data.entity.CartItem;
 import com.example.ktop_food_app.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
 
@@ -48,42 +50,48 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         CartItem item = cartItems.get(position);
 
         holder.nameTextView.setText(item.getName());
-        holder.priceTextView.setText(String.format("%d * %,d đ", item.getQuantity(), item.getPrice()));
+        holder.priceTextView.setText(String.format("%,d đ", item.getPrice()));
         holder.quantityTextView.setText(String.valueOf(item.getQuantity()));
         holder.totalPriceTextView.setText(String.format("%,d đ", item.getTotalPrice()));
-        holder.productImageView.setImageResource(item.getImageResource());
+        Glide.with(context).load(item.getImagePath()).into(holder.productImageView);
 
         holder.decreaseButton.setOnClickListener(v -> {
             if (item.getQuantity() > 1) {
                 item.setQuantity(item.getQuantity() - 1);
+                cartRef.child(item.getFoodId()).setValue(item); // Cập nhật lên Firebase
                 notifyItemChanged(position);
                 updateTotalPrice();
             } else {
-                // Khi số lượng giảm xuống 0, xóa item
                 removeItem(position);
             }
         });
 
         holder.increaseButton.setOnClickListener(v -> {
             item.setQuantity(item.getQuantity() + 1);
+            cartRef.child(item.getFoodId()).setValue(item); // Cập nhật lên Firebase
             notifyItemChanged(position);
             updateTotalPrice();
         });
     }
 
+    private DatabaseReference cartRef = FirebaseDatabase.getInstance("https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app")
+            .getReference("users")
+            .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+            .child("cart")
+            .child("items");
+
     public void removeItem(int position) {
         if (position >= 0 && position < cartItems.size()) {
+            String foodId = cartItems.get(position).getFoodId();
             cartItems.remove(position);
+            cartRef.child(foodId).removeValue(); // Xóa khỏi Firebase
             notifyItemRemoved(position);
-            // Cập nhật lại vị trí của các item sau khi xóa
             notifyItemRangeChanged(position, cartItems.size());
-            // Cập nhật tổng giá
             updateTotalPrice();
 
-            // Thông báo cho activity biết item đã bị xóa
-            if (itemRemovedListener != null) {
-                itemRemovedListener.onItemRemoved(position);
-            }
+//            if (itemRemovedListener != null) {
+//                itemRemovedListener.onItemRemoved(position);
+//            }
         }
     }
 
@@ -93,7 +101,6 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             totalPrice += item.getTotalPrice();
         }
 
-        // Notify the activity about the price change
         if (totalPriceChangedListener != null) {
             totalPriceChangedListener.onTotalPriceChanged(totalPrice);
         }
@@ -108,7 +115,6 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         void onTotalPriceChanged(long totalPrice);
     }
 
-    // Thêm interface mới để xử lý khi item bị xóa
     public interface OnItemRemovedListener {
         void onItemRemoved(int position);
     }
