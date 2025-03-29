@@ -88,7 +88,7 @@
         android:orientation="horizontal">
 
         <RatingBar
-            android:id="@+id/rating"
+            android:id="@+id/rating_detail"
             style="@android:style/Widget.Holo.RatingBar.Indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -96,7 +96,7 @@
             android:progressTint="#fbb005"
             android:scaleX="0.7"
             android:scaleY="0.7"
-            android:rating="4.5"
+            android:rating="4.0"
             android:layout_marginStart="-11dp"
             android:layout_marginEnd="-16dp"
             android:stepSize="0.1"/>

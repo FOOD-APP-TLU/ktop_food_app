@@ -40,6 +40,7 @@ public class HomeActivity extends AppCompatActivity {
     private FoodAdapter foodAdapter;
     private CategoryAdapter categoryAdapter;
     private FirebaseAuth mAuth;
+    private List<Food> allFoods = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -188,11 +189,9 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void filterFoods(String query) {
-        List<Food> allFoods = foodRepository.getFoodList();
         List<Food> filteredList = new ArrayList<>();
-
         for (Food food : allFoods) {
-            if (food.getName().toLowerCase().contains(query.toLowerCase())) {
+            if (food.getTitle().toLowerCase().contains(query.toLowerCase())) {
                 filteredList.add(food);
             }
         }
@@ -200,10 +199,22 @@ public class HomeActivity extends AppCompatActivity {
         foodAdapter.notifyDataSetChanged();
     }
 
+
     private void loadData() {
-        List<Food> foodList = foodRepository.getFoodList();
-        foodAdapter.setFoodList(foodList);
-        foodAdapter.notifyDataSetChanged();
+        foodRepository.getFoodList(new FoodRepository.FoodCallback() {
+            @Override
+            public void onSuccess(List<Food> foodList) {
+                allFoods.clear();
+                allFoods.addAll(foodList);
+                foodAdapter.setFoodList(allFoods);
+                foodAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Toast.makeText(HomeActivity.this, "Lỗi tải dữ liệu: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
