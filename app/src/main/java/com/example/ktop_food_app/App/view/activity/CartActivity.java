@@ -6,26 +6,30 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.ktop_food_app.App.model.data.entity.CartItem;
+import com.example.ktop_food_app.App.model.data.remote.FirebaseAuthData;
+import com.example.ktop_food_app.App.model.repository.AuthRepository;
 import com.example.ktop_food_app.App.view.adapter.CartAdapter;
 import com.example.ktop_food_app.R;
-
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CartActivity extends AppCompatActivity implements CartAdapter.OnTotalPriceChangedListener {
-
     private RecyclerView recyclerView;
     private CartAdapter cartAdapter;
     private List<CartItem> cartItems;
     private Button placeOrderButton;
     private TextView totalPriceTextView;
     private ImageView btnBack;
+    private DatabaseReference cartRef;
+    private AuthRepository authRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,63 +41,67 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
         placeOrderButton = findViewById(R.id.place_order_button);
         btnBack = findViewById(R.id.back_button);
 
-        // Initialize cart data
-        initCartItems();
+        // Initialize Firebase access through repository
+        authRepository = new AuthRepository(new FirebaseAuthData());
+        cartRef = authRepository.getDatabaseReference()
+                .child("users")
+                .child(authRepository.getCurrentUser().getUid())
+                .child("cart").child("items");
 
-        // Set up RecyclerView
+        // Initialize cart data
+        cartItems = new ArrayList<>();
+        setupRecyclerView();
+        loadCartFromFirebase();
+
+        // Set up listeners
+        btnBack.setOnClickListener(v -> finish());
+        placeOrderButton.setOnClickListener(v -> placeOrder());
+
+        cartAdapter.setOnItemRemovedListener(position -> removeItemFromFirebase(position));
+    }
+
+    private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         cartAdapter = new CartAdapter(cartItems, this);
         recyclerView.setAdapter(cartAdapter);
+    }
 
+    private void loadCartFromFirebase() {
+        cartRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                cartItems.clear();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    CartItem item = snapshot.getValue(CartItem.class);
+                    cartItems.add(item);
+                }
+                cartAdapter.notifyDataSetChanged();
+                updateTotalPrice();
+            }
 
-        // Calculate and display total
-//        updateTotalPrice();
-        btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-        // Set up order button
-        placeOrderButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Handle order placement
-                placeOrder();
-            }
-        });
-        cartAdapter.setOnItemRemovedListener(new CartAdapter.OnItemRemovedListener() {
-            @Override
-            public void onItemRemoved(int position) {
-                // Bạn có thể thêm xử lý bổ sung ở đây nếu cần
-                // Ví dụ: hiển thị thông báo "Đã xóa món hàng"
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(CartActivity.this, "Lỗi: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void initCartItems() {
-        cartItems = new ArrayList<>();
-        cartItems.add(new CartItem("Chicken Drumsticks", 80000, 1, R.drawable.mozzahotdog));
-        cartItems.add(new CartItem("Cheeseburger", 60000, 1, R.drawable.mozzahotdog));
-        cartItems.add(new CartItem("CoCa CoLa", 12000, 1, R.drawable.mozzahotdog));
-        cartItems.add(new CartItem("Fanta orange", 12000, 1, R.drawable.mozzahotdog));
-        cartItems.add(new CartItem("Fanta orange", 12000, 1, R.drawable.mozzahotdog));
-        cartItems.add(new CartItem("Fanta orange", 12000, 1, R.drawable.mozzahotdog));
-        cartItems.add(new CartItem("Fanta orange", 12000, 1, R.drawable.mozzahotdog));
-        cartItems.add(new CartItem("Fanta orange", 12000, 1, R.drawable.mozzahotdog));
+    private void removeItemFromFirebase(int position) {
+        String foodId = cartItems.get(position).getFoodId();
+        cartRef.child(foodId).removeValue()
+                .addOnSuccessListener(aVoid -> Toast.makeText(CartActivity.this, "Đã xóa món hàng", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(CartActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
-//    private void updateTotalPrice() {
-//        long total = 0;
-//        for (CartItem item : cartItems) {
-//            total += item.getPrice() * item.getQuantity();
-//        }
-
-    // Update total display
-//        if (totalPriceTextView != null) {
-//            totalPriceTextView.setText(String.format("%,d đ", total));
-//        }
-//    }
+    private void updateTotalPrice() {
+        long total = 0;
+        for (CartItem item : cartItems) {
+            total += item.getPrice() * item.getQuantity();
+        }
+        if (totalPriceTextView != null) {
+            totalPriceTextView.setText(String.format("%,d đ", total));
+        }
+    }
 
     @Override
     public void onTotalPriceChanged(long totalPrice) {
@@ -104,6 +112,6 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
 
     private void placeOrder() {
         Toast.makeText(this, "Order placed successfully!", Toast.LENGTH_SHORT).show();
+        cartRef.removeValue(); // Xóa giỏ hàng sau khi đặt hàng
     }
-
 }

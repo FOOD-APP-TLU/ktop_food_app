@@ -4,19 +4,29 @@ import android.os.Bundle;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
+import com.example.ktop_food_app.App.model.data.entity.CartItem;
 import com.example.ktop_food_app.App.model.data.entity.Food;
+import com.example.ktop_food_app.App.model.data.remote.FirebaseAuthData;
+import com.example.ktop_food_app.App.model.repository.AuthRepository;
 import com.example.ktop_food_app.databinding.ActivityFoodDetailBinding;
+import com.google.firebase.database.DatabaseReference;
 
 public class FoodDetailActivity extends AppCompatActivity {
     private ActivityFoodDetailBinding binding;
     private Food food;
     private int quantity = 1;
+    private DatabaseReference cartRef;
+    private AuthRepository authRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityFoodDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        authRepository = new AuthRepository(new FirebaseAuthData());
+        String uid = authRepository.getCurrentUser().getUid();
+        cartRef = authRepository.getDatabaseReference().child("users").child(uid).child("cart").child("items");
 
         getFoodFromIntent();
         setupUI();
@@ -42,10 +52,8 @@ public class FoodDetailActivity extends AppCompatActivity {
 
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
-
         binding.btnIncrease.setOnClickListener(v -> increaseQuantity());
         binding.btnDecrease.setOnClickListener(v -> decreaseQuantity());
-
         binding.addToCart.setOnClickListener(v -> addToCart());
     }
 
@@ -68,7 +76,24 @@ public class FoodDetailActivity extends AppCompatActivity {
     }
 
     private void addToCart() {
-        Toast.makeText(this, "Thêm vào giỏ hàng thành công", Toast.LENGTH_SHORT).show();
-        // Thêm xử lý thêm vào giỏ hàng nếu cần
+        cartRef.child(food.getFoodId()).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                CartItem existingItem = task.getResult().getValue(CartItem.class);
+                if (existingItem != null) {
+                    int newQuantity = existingItem.getQuantity() + quantity;
+                    cartRef.child(food.getFoodId()).child("quantity").setValue(newQuantity)
+                            .addOnSuccessListener(aVoid -> Toast.makeText(this, "Cập nhật giỏ hàng thành công", Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e -> Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                } else {
+                    CartItem cartItem = new CartItem(food.getTitle(), food.getPrice(), quantity, food.getImagePath());
+                    cartItem.setFoodId(food.getFoodId());
+                    cartRef.child(food.getFoodId()).setValue(cartItem)
+                            .addOnSuccessListener(aVoid -> Toast.makeText(this, "Thêm vào giỏ hàng thành công", Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e -> Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                }
+            } else {
+                Toast.makeText(this, "Lỗi khi kiểm tra giỏ hàng: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
