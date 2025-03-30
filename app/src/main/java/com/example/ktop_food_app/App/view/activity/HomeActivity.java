@@ -10,17 +10,20 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.example.ktop_food_app.App.model.data.entity.Category;
 import com.example.ktop_food_app.App.model.data.entity.Food;
 import com.example.ktop_food_app.App.model.data.remote.FirebaseAuthData;
+import com.example.ktop_food_app.App.model.data.remote.FirebaseFoodData;
 import com.example.ktop_food_app.App.model.repository.AuthRepository;
 import com.example.ktop_food_app.App.model.repository.CategoryRepository;
 import com.example.ktop_food_app.App.model.repository.FoodRepository;
 import com.example.ktop_food_app.App.view.activity.Auth.LoginActivity;
 import com.example.ktop_food_app.App.view.adapter.CategoryAdapter;
 import com.example.ktop_food_app.App.view.adapter.FoodAdapter;
+import com.example.ktop_food_app.App.viewmodel.CategoryViewModel;
+import com.example.ktop_food_app.App.viewmodel.FoodViewModel;
 import com.example.ktop_food_app.R;
 import com.example.ktop_food_app.databinding.ActivityNavHomeBinding;
 import com.example.ktop_food_app.databinding.NavHeaderBinding;
@@ -46,6 +49,8 @@ public class HomeActivity extends AppCompatActivity {
     private AuthRepository authRepository;
     private DatabaseReference mDatabase;
     private String currentUserId;
+    private CategoryViewModel categoryViewModel;
+    private FoodViewModel foodViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +80,7 @@ public class HomeActivity extends AppCompatActivity {
         categoryRepository = new CategoryRepository();
 
         setupRecyclerViews();
+        setupViewModels();
         handleSearchButton();
         loadData();
         handleMenuButton();
@@ -184,25 +190,33 @@ public class HomeActivity extends AppCompatActivity {
     private void setupRecyclerViews() {
         // GridView cho Categories
         categoryAdapter = new CategoryAdapter(this, new ArrayList<>());
-        binding.home.gridViewCategories.setAdapter(categoryAdapter); // Sửa từ gridViewCategories thành gridViewCategories (khớp với XML)
+        binding.home.gridViewCategories.setAdapter(categoryAdapter);
 
         // RecyclerView cho Foods
         binding.home.recyclerViewFoods.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         foodAdapter = new FoodAdapter(this, new ArrayList<>());
         binding.home.recyclerViewFoods.setAdapter(foodAdapter);
+    }
 
-        // Lấy danh sách Category từ Firebase
-        categoryRepository.getCategoryList(new CategoryRepository.CategoryCallback() {
-            @Override
-            public void onCategoriesLoaded(List<Category> categoryList) {
-                categoryAdapter.setCategoryList(categoryList);
-            }
+    private void setupViewModels() {
+        categoryViewModel = new ViewModelProvider(this).get(CategoryViewModel.class);
+        foodViewModel = new ViewModelProvider(this).get(FoodViewModel.class);
 
-            @Override
-            public void onError(String error) {
-                Toast.makeText(HomeActivity.this, "Lỗi tải danh mục: " + error, Toast.LENGTH_SHORT).show();
-            }
+        categoryViewModel.getCategoriesLiveData().observe(this, categoryList -> {
+            categoryAdapter.setCategoryList(categoryList);
+        });
+
+        categoryViewModel.getErrorMessage().observe(this, error -> {
+            Toast.makeText(this, "Lỗi tải danh mục: " + error, Toast.LENGTH_SHORT).show();
+        });
+
+        foodViewModel.getFoodListLiveData().observe(this, foodList -> {
+            foodAdapter.setFoodList(foodList);
+        });
+
+        foodViewModel.getErrorMessage().observe(this, error -> {
+            Toast.makeText(this, "Lỗi tải món ăn: " + error, Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -226,7 +240,7 @@ public class HomeActivity extends AppCompatActivity {
 
 
     private void loadData() {
-        foodRepository.getFoodList(new FoodRepository.FoodCallback() {
+        foodRepository.getFoodList(new FirebaseFoodData.FoodCallback() {
             @Override
             public void onSuccess(List<Food> foodList) {
                 allFoods.clear();
