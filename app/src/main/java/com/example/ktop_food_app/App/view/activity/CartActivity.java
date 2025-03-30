@@ -18,10 +18,6 @@ import com.example.ktop_food_app.App.model.repository.AuthRepository;
 import com.example.ktop_food_app.App.view.adapter.CartAdapter;
 import com.example.ktop_food_app.App.viewmodel.CartViewModel;
 import com.example.ktop_food_app.R;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +30,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
     private TextView totalPriceTextView;
     private ImageView btnBack;
     private CartViewModel cartViewModel;
+    private AuthRepository authRepository; // Declare as a field
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,11 +39,14 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
 
         // Initialize UI components
         recyclerView = findViewById(R.id.cart_recycler_view);
-        placeOrderButton = findViewById(R.id.place_order_button);
+        placeOrderButton = findViewById(R.id.place_order_button);// Initialize this
         btnBack = findViewById(R.id.back_button);
 
-        // Lấy ID người dùng hiện tại
-        String userId = new AuthRepository(new FirebaseAuthData()).getCurrentUser().getUid();
+        // Initialize AuthRepository
+        authRepository = new AuthRepository(new FirebaseAuthData());
+        String userId = authRepository.getCurrentUser().getUid();
+
+        // Initialize ViewModel with userId
         cartViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
             @Override
             public <T extends androidx.lifecycle.ViewModel> T create(Class<T> modelClass) {
@@ -54,12 +54,12 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
             }
         }).get(CartViewModel.class);
 
-        // Khởi tạo giỏ hàng
+        // Initialize cart
         cartItems = new ArrayList<>();
         setupRecyclerView();
         observeViewModel();
 
-        // Xử lý sự kiện
+        // Set up event listeners
         btnBack.setOnClickListener(v -> finish());
         placeOrderButton.setOnClickListener(v -> placeOrder());
 
@@ -79,7 +79,6 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
                 cartItems.addAll(items);
             }
             cartAdapter.notifyDataSetChanged();
-            updateTotalPrice();
         });
 
         cartViewModel.getTotalPrice().observe(this, this::onTotalPriceChanged);
@@ -96,16 +95,6 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
         cartViewModel.removeItem(foodId);
     }
 
-    private void updateTotalPrice() {
-        long total = 0;
-        for (CartItem item : cartItems) {
-            total += item.getPrice() * item.getQuantity();
-        }
-        if (totalPriceTextView != null) {
-            totalPriceTextView.setText(String.format("%,d đ", total));
-        }
-    }
-
     @Override
     public void onTotalPriceChanged(long totalPrice) {
         if (totalPriceTextView != null) {
@@ -119,10 +108,10 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
             return;
         }
 
-        // Chuyển sang PaymentActivity và truyền dữ liệu giỏ hàng
+        // Transfer to PaymentActivity with cart data
         Intent intent = new Intent(CartActivity.this, PaymentActivity.class);
-        intent.putParcelableArrayListExtra("cartItems", new ArrayList<>(cartItems)); // Truyền danh sách cartItems
-        intent.putExtra("userId", authRepository.getCurrentUser().getUid()); // Truyền userId
+        intent.putParcelableArrayListExtra("cartItems", new ArrayList<>(cartItems));
+        intent.putExtra("userId", authRepository.getCurrentUser().getUid());
         startActivity(intent);
     }
 }
