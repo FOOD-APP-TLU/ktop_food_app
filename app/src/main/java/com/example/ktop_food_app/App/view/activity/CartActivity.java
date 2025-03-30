@@ -1,5 +1,6 @@
 package com.example.ktop_food_app.App.view.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -18,6 +19,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,7 +75,9 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
                 cartItems.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     CartItem item = snapshot.getValue(CartItem.class);
-                    cartItems.add(item);
+                    if (item != null) {
+                        cartItems.add(item);
+                    }
                 }
                 cartAdapter.notifyDataSetChanged();
                 updateTotalPrice();
@@ -111,7 +115,15 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
     }
 
     private void placeOrder() {
-        Toast.makeText(this, "Order placed successfully!", Toast.LENGTH_SHORT).show();
-        cartRef.removeValue(); // Xóa giỏ hàng sau khi đặt hàng
+        if (cartItems == null || cartItems.isEmpty()) {
+            Toast.makeText(this, "Giỏ hàng trống, vui lòng thêm món ăn trước!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Chuyển sang PaymentActivity và truyền dữ liệu giỏ hàng
+        Intent intent = new Intent(CartActivity.this, PaymentActivity.class);
+        intent.putParcelableArrayListExtra("cartItems", new ArrayList<>(cartItems)); // Truyền danh sách cartItems
+        intent.putExtra("userId", authRepository.getCurrentUser().getUid()); // Truyền userId
+        startActivity(intent);
     }
 }
