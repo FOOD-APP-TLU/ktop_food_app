@@ -1,10 +1,10 @@
 package com.example.ktop_food_app.App.viewmodel;
 
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.ktop_food_app.App.model.data.entity.Food;
+import com.example.ktop_food_app.App.model.data.remote.FirebaseFoodData;
 import com.example.ktop_food_app.App.model.repository.FoodRepository;
 
 import java.util.List;
@@ -29,7 +29,7 @@ public class FoodViewModel extends ViewModel {
     }
 
     public void loadFoodList() {
-        foodRepository.getFoodList(new FoodRepository.FoodCallback() {
+        foodRepository.getFoodList(new FirebaseFoodData.FoodCallback() {
             @Override
             public void onSuccess(List<Food> foodList) {
                 foodListLiveData.setValue(foodList);
