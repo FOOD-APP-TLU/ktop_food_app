@@ -1,10 +1,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    android:background="#fdeedb">
+    android:background="#fdeedb"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,11 +18,11 @@
             android:id="@+id/btn_back"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginStart="8dp"
             android:clickable="true"
             android:contentDescription="Back"
             android:focusable="true"
             android:padding="8dp"
-            android:layout_marginStart="8dp"
             android:src="@drawable/ic_back" />
 
         <TextView
@@ -30,11 +30,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginRight="48dp"
-            android:fontFamily="@font/annapurna_sil"
+            android:fontFamily="@font/annapurna_sil_bold"
             android:text="Food Details"
-            android:gravity="center"
-            android:textColor="@color/color_primary"
-            android:textSize="31sp" />
+            android:textAlignment="center"
+            android:textColor="#884F04"
+            android:textSize="32sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 
@@ -42,20 +43,20 @@
         android:id="@+id/img_food_detail"
         android:layout_width="match_parent"
         android:layout_height="250dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/beeflasagma"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        app:shapeAppearanceOverlay="@style/BorderImgFoodDetail"/>
+        android:scaleType="centerCrop"
+        android:src="@drawable/beeflasagma"
+        app:shapeAppearanceOverlay="@style/BorderImgFoodDetail" />
 
     <!-- Tên món ăn và giá -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginTop="8dp">
+        android:orientation="horizontal">
 
         <TextView
             android:id="@+id/txt_food_detail_name"
@@ -92,21 +93,21 @@
             style="@android:style/Widget.Holo.RatingBar.Indicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:numStars="5"
-            android:progressTint="#fbb005"
-            android:scaleX="0.7"
-            android:scaleY="0.7"
-            android:rating="4.0"
             android:layout_marginStart="-11dp"
             android:layout_marginEnd="-16dp"
-            android:stepSize="0.1"/>
+            android:numStars="5"
+            android:progressTint="#fbb005"
+            android:rating="4.0"
+            android:scaleX="0.7"
+            android:scaleY="0.7"
+            android:stepSize="0.1" />
 
         <TextView
             android:id="@+id/txt_food_detail_rating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_gravity="center_vertical"
+            android:layout_weight="1"
             android:fontFamily="@font/annapurna_sil"
             android:text="5.0 Rating"
             android:textColor="#8E4B03"
@@ -117,10 +118,10 @@
             android:id="@+id/txt_food_detail_time"
             android:layout_width="wrap_content"
             android:layout_height="23dp"
-            android:gravity="center_vertical"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="4dp"
             android:fontFamily="@font/linden_hill"
+            android:gravity="center_vertical"
             android:text="5 - 10min"
             android:textColor="#8E4B03"
             android:textSize="16sp" />
@@ -128,22 +129,22 @@
         <ImageView
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:layout_marginLeft="4dp"
-            android:src="@drawable/time_icon"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginLeft="4dp"
+            android:layout_marginEnd="16dp"
+            android:src="@drawable/time_icon" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="8dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:paddingStart="8dp"
         android:background="@drawable/custom_bg_des"
-        android:elevation="8dp">
+        android:elevation="8dp"
+        android:orientation="vertical"
+        android:paddingStart="8dp">
 
         <TextView
             android:layout_width="110dp"
@@ -173,10 +174,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="start"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:layout_marginStart="16dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <TextView
             android:layout_width="match_parent"
@@ -193,9 +194,9 @@
             android:layout_height="48dp"
             android:layout_marginStart="16dp"
             android:background="@null"
-            android:src="@drawable/minus_icon"
             android:contentDescription="Giảm số lượng"
-            android:scaleType="centerInside"/>
+            android:scaleType="centerInside"
+            android:src="@drawable/minus_icon" />
 
         <TextView
             android:id="@+id/txt_quantity"
@@ -213,9 +214,9 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="@null"
-            android:src="@drawable/plus_icon"
             android:contentDescription="Tăng số lượng"
-            android:scaleType="centerInside"/>
+            android:scaleType="centerInside"
+            android:src="@drawable/plus_icon" />
     </LinearLayout>
 
     <!-- Tổng giá -->
@@ -228,17 +229,17 @@
             android:id="@+id/bottomLayoutDetailCategory"
             android:layout_width="match_parent"
             android:layout_height="100dp"
-            android:orientation="horizontal"
+            android:layout_alignParentBottom="true"
             android:background="#dcbe9c"
-            android:layout_alignParentBottom="true">  <!-- Luôn bám đáy -->
+            android:orientation="horizontal">  <!-- Luôn bám đáy -->
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:layout_gravity="center_vertical"
+                android:layout_marginStart="16dp"
                 android:layout_weight="1"
-                android:layout_marginStart="16dp">
+                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -256,7 +257,7 @@
                     android:text="54.0000 đ"
                     android:textColor="@color/text_price_food"
                     android:textSize="18sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
             </LinearLayout>
 
 
@@ -264,31 +265,30 @@
                 android:id="@+id/add_to_cart"
                 android:layout_width="0dp"
                 android:layout_height="60dp"
-                android:orientation="horizontal"
-                android:layout_weight="1"
                 android:layout_gravity="center_vertical"
                 android:layout_marginEnd="16dp"
+                android:layout_weight="1"
                 android:background="@drawable/custom_btn_add_to_card"
-                >
+                android:orientation="horizontal">
 
                 <ImageView
                     android:id="@+id/img_cart_icon"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:src="@drawable/cart_white_icon"
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="16dp"
+                    android:layout_marginEnd="8dp"
                     android:contentDescription="Cart Icon"
-                    android:layout_marginEnd="8dp"/>
+                    android:src="@drawable/cart_white_icon" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:fontFamily="@font/lilita_one"
+                    android:text="Add to cart"
                     android:textColor="#FFFFFF"
-                    android:textSize="20dp"
-                    android:text="Add to cart" />
+                    android:textSize="20dp" />
             </LinearLayout>
 
 

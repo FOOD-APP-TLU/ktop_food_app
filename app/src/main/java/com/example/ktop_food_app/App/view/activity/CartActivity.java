@@ -1,23 +1,23 @@
 package com.example.ktop_food_app.App.view.activity;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.ktop_food_app.App.model.data.entity.CartItem;
 import com.example.ktop_food_app.App.model.data.remote.FirebaseAuthData;
 import com.example.ktop_food_app.App.model.repository.AuthRepository;
 import com.example.ktop_food_app.App.view.adapter.CartAdapter;
+import com.example.ktop_food_app.App.viewmodel.CartViewModel;
 import com.example.ktop_food_app.R;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,8 +28,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
     private Button placeOrderButton;
     private TextView totalPriceTextView;
     private ImageView btnBack;
-    private DatabaseReference cartRef;
-    private AuthRepository authRepository;
+    private CartViewModel cartViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,23 +40,25 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
         placeOrderButton = findViewById(R.id.place_order_button);
         btnBack = findViewById(R.id.back_button);
 
-        // Initialize Firebase access through repository
-        authRepository = new AuthRepository(new FirebaseAuthData());
-        cartRef = authRepository.getDatabaseReference()
-                .child("users")
-                .child(authRepository.getCurrentUser().getUid())
-                .child("cart").child("items");
+        // Lấy ID người dùng hiện tại
+        String userId = new AuthRepository(new FirebaseAuthData()).getCurrentUser().getUid();
+        cartViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(Class<T> modelClass) {
+                return (T) new CartViewModel(userId);
+            }
+        }).get(CartViewModel.class);
 
-        // Initialize cart data
+        // Khởi tạo giỏ hàng
         cartItems = new ArrayList<>();
         setupRecyclerView();
-        loadCartFromFirebase();
+        observeViewModel();
 
-        // Set up listeners
+        // Xử lý sự kiện
         btnBack.setOnClickListener(v -> finish());
         placeOrderButton.setOnClickListener(v -> placeOrder());
 
-        cartAdapter.setOnItemRemovedListener(position -> removeItemFromFirebase(position));
+        cartAdapter.setOnItemRemovedListener(position -> removeItem(position));
     }
 
     private void setupRecyclerView() {
@@ -66,31 +67,28 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
         recyclerView.setAdapter(cartAdapter);
     }
 
-    private void loadCartFromFirebase() {
-        cartRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                cartItems.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    CartItem item = snapshot.getValue(CartItem.class);
-                    cartItems.add(item);
-                }
-                cartAdapter.notifyDataSetChanged();
-                updateTotalPrice();
+    private void observeViewModel() {
+        cartViewModel.getCartItems().observe(this, items -> {
+            cartItems.clear();
+            if (items != null) {
+                cartItems.addAll(items);
             }
+            cartAdapter.notifyDataSetChanged();
+            updateTotalPrice();
+        });
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(CartActivity.this, "Lỗi: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+        cartViewModel.getTotalPrice().observe(this, this::onTotalPriceChanged);
+
+        cartViewModel.getErrorMessage().observe(this, errorMessage -> {
+            if (errorMessage != null) {
+                Toast.makeText(CartActivity.this, "Lỗi: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void removeItemFromFirebase(int position) {
+    private void removeItem(int position) {
         String foodId = cartItems.get(position).getFoodId();
-        cartRef.child(foodId).removeValue()
-                .addOnSuccessListener(aVoid -> Toast.makeText(CartActivity.this, "Đã xóa món hàng", Toast.LENGTH_SHORT).show())
-                .addOnFailureListener(e -> Toast.makeText(CartActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+        cartViewModel.removeItem(foodId);
     }
 
     private void updateTotalPrice() {
@@ -111,7 +109,16 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
     }
 
     private void placeOrder() {
-        Toast.makeText(this, "Order placed successfully!", Toast.LENGTH_SHORT).show();
-        cartRef.removeValue(); // Xóa giỏ hàng sau khi đặt hàng
+        cartViewModel.clearCart();
+
+        if (cartItems == null || cartItems.isEmpty()) {
+            Toast.makeText(this, "Giỏ hàng trống, vui lòng thêm món ăn trước!", Toast.LENGTH_SHORT).show();
+        }
+
+//        // Chuyển sang PaymentActivity và truyền dữ liệu giỏ hàng
+//        Intent intent = new Intent(CartActivity.this, PaymentActivity.class);
+//        intent.putParcelableArrayListExtra("cartItems", new ArrayList<>(cartItems)); // Truyền danh sách cartItems
+//        intent.putExtra("userId", authRepository.getCurrentUser().getUid()); // Truyền userId
+//        startActivity(intent);
     }
 }
