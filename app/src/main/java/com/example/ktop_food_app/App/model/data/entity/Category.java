@@ -5,15 +5,19 @@ import java.io.Serializable;
 public class Category implements Serializable {
     private int id;
     private String name;
-    private int img;
+    private String imagePath;
 
-    public Category(int id, String name, int img) {
-        this.id = id;
-        this.name = name;
-        this.img = img;
+    // Constructor mặc định (yêu cầu bởi Firebase)
+    public Category() {
     }
 
-    // Getters và Setters
+    public Category(String name, int id, String imagePath) {
+        this.name = name;
+        this.id = id;
+        this.imagePath = imagePath;
+    }
+
+    // Getter và Setter
     public int getId() {
         return id;
     }
@@ -30,11 +34,11 @@ public class Category implements Serializable {
         this.name = name;
     }
 
-    public int getImg() {
-        return img;
+    public String getImagePath() {
+        return imagePath;
     }
 
-    public void setImg(int img) {
-        this.img = img;
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 }

@@ -3,100 +3,100 @@ package com.example.ktop_food_app.App.model.data.entity;
 import java.io.Serializable;
 
 public class Food implements Serializable {
-    private String FoodId;
-    private String Title;
-    private String Description;
-    private int Price;
-    private float Star;
-    private String TimeValue;
-    private String ImagePath;
-    private int CategoryId;
-    private boolean BestFood;
+    private String foodId;
+    private String title;
+    private String description;
+    private int price;
+    private float star;
+    private String timeValue;
+    private String imagePath;
+    private int categoryId;
+    private boolean bestFood;
 
     public Food() {
     }
 
-    public Food(String foodId, String title, String description, int price, float star, String timeValue, int categoryId, String imagePath, boolean bestFood) {
-        FoodId = foodId;
-        Title = title;
-        Description = description;
-        Price = price;
-        Star = star;
-        TimeValue = timeValue;
-        CategoryId = categoryId;
-        ImagePath = imagePath;
-        BestFood = bestFood;
-    }
-
-    public String getFoodId() {
-        return FoodId;
-    }
-
-    public void setFoodId(String foodId) {
-        FoodId = foodId;
+    public Food(boolean bestFood, int categoryId, String imagePath, String timeValue, int price, float star, String description, String title, String foodId) {
+        this.bestFood = bestFood;
+        this.categoryId = categoryId;
+        this.imagePath = imagePath;
+        this.timeValue = timeValue;
+        this.price = price;
+        this.star = star;
+        this.description = description;
+        this.title = title;
+        this.foodId = foodId;
     }
 
     public String getTitle() {
-        return Title;
+        return title;
     }
 
     public void setTitle(String title) {
-        Title = title;
+        this.title = title;
     }
 
-    public int getPrice() {
-        return Price;
+    public String getFoodId() {
+        return foodId;
     }
 
-    public void setPrice(int price) {
-        Price = price;
+    public void setFoodId(String foodId) {
+        this.foodId = foodId;
     }
 
     public String getDescription() {
-        return Description;
+        return description;
     }
 
     public void setDescription(String description) {
-        Description = description;
+        this.description = description;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
     }
 
     public float getStar() {
-        return Star;
+        return star;
     }
 
     public void setStar(float star) {
-        Star = star;
+        this.star = star;
     }
 
     public String getTimeValue() {
-        return TimeValue;
+        return timeValue;
     }
 
     public void setTimeValue(String timeValue) {
-        TimeValue = timeValue;
-    }
-
-    public int getCategoryId() {
-        return CategoryId;
-    }
-
-    public void setCategoryId(int categoryId) {
-        CategoryId = categoryId;
+        this.timeValue = timeValue;
     }
 
     public String getImagePath() {
-        return ImagePath;
+        return imagePath;
     }
 
     public void setImagePath(String imagePath) {
-        ImagePath = imagePath;
+        this.imagePath = imagePath;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
     }
 
     public boolean isBestFood() {
-        return BestFood;
+        return bestFood;
     }
 
     public void setBestFood(boolean bestFood) {
-        BestFood = bestFood;
+        this.bestFood = bestFood;
     }
 }

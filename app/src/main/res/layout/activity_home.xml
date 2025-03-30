@@ -15,7 +15,6 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal">
 
-        <!-- Menu button icon -->
         <ImageView
             android:id="@+id/menu_button_icon"
             android:layout_width="36dp"
@@ -27,7 +26,6 @@
             app:srcCompat="@drawable/menu_icon"
             tools:ignore="TouchTargetSizeCheck" />
 
-        <!-- Welcome text -->
         <TextView
             android:id="@+id/txt_welcome"
             android:layout_width="wrap_content"
@@ -38,7 +36,6 @@
             android:textSize="36sp"
             android:textStyle="bold" />
 
-        <!-- User image -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/img_user"
             android:layout_width="40dp"
@@ -60,16 +57,14 @@
         android:layout_gravity="center"
         android:layout_marginTop="8dp">
 
-        <!-- Search input container -->
         <FrameLayout
             android:id="@+id/search_container"
             android:layout_width="0dp"
             android:layout_height="40dp"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/cart_icon"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <!-- Search input field -->
             <EditText
                 android:id="@+id/edt_search"
                 android:layout_width="match_parent"
@@ -87,7 +82,6 @@
                 android:textSize="16sp"
                 tools:ignore="TouchTargetSizeCheck" />
 
-            <!-- Search button icon -->
             <ImageView
                 android:id="@+id/search_button_icon"
                 android:layout_width="36dp"
@@ -97,7 +91,6 @@
                 app:srcCompat="@drawable/search_icon" />
         </FrameLayout>
 
-        <!-- Cart icon -->
         <ImageView
             android:id="@+id/cart_icon"
             android:layout_width="40dp"
@@ -112,11 +105,11 @@
     <!-- Main content with food list and categories -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:layout_marginTop="8dp"
+        android:layout_weight="1"
         android:orientation="vertical">
 
-        <!-- Title for best foods -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -126,14 +119,12 @@
             android:textColor="#8E4B03"
             android:textSize="32sp" />
 
-        <!-- RecyclerView for food list -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view_foods"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal" />
 
-        <!-- Title for categories -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -144,13 +135,14 @@
             android:textColor="#8E4B03"
             android:textSize="28sp" />
 
-        <!-- GridView for categories -->
         <GridView
-            android:id="@+id/grid_View_categories"
+            android:id="@+id/grid_view_categories"
             android:layout_width="match_parent"
-            android:layout_height="379dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:horizontalSpacing="16dp"
             android:numColumns="4"
+            android:stretchMode="columnWidth"
             android:verticalSpacing="16dp" />
     </LinearLayout>
 </LinearLayout>
