@@ -2,6 +2,7 @@ package com.example.ktop_food_app.App.view.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,54 +10,92 @@ import android.widget.ArrayAdapter;
 
 import androidx.annotation.NonNull;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.ktop_food_app.App.model.data.entity.Category;
 import com.example.ktop_food_app.App.view.activity.FoodListActivity;
 import com.example.ktop_food_app.databinding.ItemCategoryBinding;
 
+import java.util.ArrayList;
 import java.util.List;
 
-// Adapter de hien thi danh sach danh muc trong GridView
 public class CategoryAdapter extends ArrayAdapter<Category> {
 
     private final Context context;
     private final List<Category> categoryList;
 
-    // Constructor nhan context va danh sach danh muc
     public CategoryAdapter(Context context, List<Category> categoryList) {
-        super(context, 0, categoryList); // 0 la resource ID, se xu ly trong getView
+        super(context, 0, categoryList != null ? categoryList : new ArrayList<>());
         this.context = context;
-        this.categoryList = categoryList;
+        this.categoryList = categoryList != null ? categoryList : new ArrayList<>();
+        Log.d("CategoryAdapter", "Adapter initialized with initial size: " + this.categoryList.size());
+    }
+
+    public void setCategoryList(List<Category> newCategoryList) {
+        this.categoryList.clear();
+        if (newCategoryList != null && !newCategoryList.isEmpty()) {
+            this.categoryList.addAll(newCategoryList);
+            Log.d("CategoryAdapter", "setCategoryList called with " + newCategoryList.size() + " items");
+            for (Category category : newCategoryList) {
+                Log.d("CategoryAdapter", "Category: ID=" + category.getId() + ", Name=" + category.getName() + ", ImagePath=" + category.getImagePath());
+            }
+        } else {
+            Log.w("CategoryAdapter", "setCategoryList received null or empty list");
+        }
+        notifyDataSetChanged();
+        Log.d("CategoryAdapter", "notifyDataSetChanged called, current size: " + categoryList.size());
     }
 
     @NonNull
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ItemCategoryBinding binding; // Binding cho layout item_category.xml
+        ItemCategoryBinding binding;
 
-        // Neu convertView la null, inflate layout voi View Binding
         if (convertView == null) {
             binding = ItemCategoryBinding.inflate(LayoutInflater.from(context), parent, false);
             convertView = binding.getRoot();
         } else {
-            // Neu convertView da ton tai, bind lai de tai su dung
             binding = ItemCategoryBinding.bind(convertView);
         }
 
-        // Lay danh muc tai vi tri
         Category category = categoryList.get(position);
+        Log.d("CategoryAdapter", "Rendering item at position " + position + ": ID=" + category.getId() + ", Name=" + category.getName());
 
-        // Gan du lieu vao cac view thong qua binding
-        binding.txtCategory.setText(category.getName());
-        binding.imgCategory.setImageResource(category.getImg());
+        // Đặt tên danh mục
+        binding.txtCategory.setText(category.getName() != null ? category.getName() : "Unnamed Category");
 
-//        // Xu ly su kien click tren item
+        // Xử lý URL ảnh với Glide
+        String imageUrl = category.getImagePath();
+        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+            Log.d("CategoryAdapter", "Loading image for " + category.getName() + ": " + imageUrl);
+            Glide.with(context)
+                    .load(imageUrl)
+                    .placeholder(android.R.drawable.ic_menu_gallery)
+                    .error(android.R.drawable.ic_menu_gallery)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .override(60, 60) // Resize ảnh để khớp với ImageView (60dp x 60dp)
+                    .centerCrop() // Đảm bảo ảnh được cắt đúng tỷ lệ
+                    .into(binding.imgCategory);
+        } else {
+            Log.w("CategoryAdapter", "Image URL is null or empty for " + category.getName());
+            binding.imgCategory.setImageResource(android.R.drawable.ic_menu_gallery);
+        }
+
+        // Xử lý sự kiện click
         binding.getRoot().setOnClickListener(v -> {
+            Log.d("CategoryAdapter", "Clicked on category: " + category.getName());
             Intent intent = new Intent(context, FoodListActivity.class);
-            intent.putExtra("category", category); // Truyen doi tuong Category qua Intent
+            intent.putExtra("category", category);
             context.startActivity(intent);
         });
 
-        binding.getRoot().setPadding(30, 0, 0, 0); // Them padding ben trai 30px cho layout goc
         return convertView;
+    }
+
+    @Override
+    public int getCount() {
+        int count = categoryList.size();
+        Log.d("CategoryAdapter", "getCount called, returning: " + count);
+        return count;
     }
 }

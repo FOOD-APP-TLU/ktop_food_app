@@ -36,13 +36,13 @@ import java.util.List;
 
 public class HomeActivity extends AppCompatActivity {
 
+    private final List<Food> allFoods = new ArrayList<>();
     private ActivityNavHomeBinding binding;
     private NavHeaderBinding headerBinding;
     private FoodRepository foodRepository;
     private CategoryRepository categoryRepository;
     private FoodAdapter foodAdapter;
     private CategoryAdapter categoryAdapter;
-    private List<Food> allFoods = new ArrayList<>();
     private AuthRepository authRepository;
     private DatabaseReference mDatabase;
     private String currentUserId;
@@ -180,15 +180,30 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
+    // Trong HomeActivity, phương thức setupRecyclerViews()
     private void setupRecyclerViews() {
+        // GridView cho Categories
+        categoryAdapter = new CategoryAdapter(this, new ArrayList<>());
+        binding.home.gridViewCategories.setAdapter(categoryAdapter); // Sửa từ gridViewCategories thành gridViewCategories (khớp với XML)
+
+        // RecyclerView cho Foods
         binding.home.recyclerViewFoods.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         foodAdapter = new FoodAdapter(this, new ArrayList<>());
         binding.home.recyclerViewFoods.setAdapter(foodAdapter);
 
-        List<Category> categoryList = categoryRepository.getCategoryList();
-        categoryAdapter = new CategoryAdapter(this, categoryList);
-        binding.home.gridViewCategories.setAdapter(categoryAdapter);
+        // Lấy danh sách Category từ Firebase
+        categoryRepository.getCategoryList(new CategoryRepository.CategoryCallback() {
+            @Override
+            public void onCategoriesLoaded(List<Category> categoryList) {
+                categoryAdapter.setCategoryList(categoryList);
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(HomeActivity.this, "Lỗi tải danh mục: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void handleSearchButton() {
@@ -201,7 +216,7 @@ public class HomeActivity extends AppCompatActivity {
     private void filterFoods(String query) {
         List<Food> filteredList = new ArrayList<>();
         for (Food food : allFoods) {
-            if (food.getTitle().toLowerCase().contains(query.toLowerCase())) {
+            if (food.isBestFood() && food.getTitle().toLowerCase().contains(query.toLowerCase())) {
                 filteredList.add(food);
             }
         }
@@ -215,7 +230,11 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onSuccess(List<Food> foodList) {
                 allFoods.clear();
-                allFoods.addAll(foodList);
+                for (Food food : foodList) {
+                    if (food.isBestFood()) {
+                        allFoods.add(food);
+                    }
+                }
                 foodAdapter.setFoodList(allFoods);
                 foodAdapter.notifyDataSetChanged();
             }
