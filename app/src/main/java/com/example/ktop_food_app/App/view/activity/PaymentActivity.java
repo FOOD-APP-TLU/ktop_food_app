@@ -1,241 +1,244 @@
 package com.example.ktop_food_app.App.view.activity;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.ktop_food_app.App.model.data.entity.CartItem;
-import com.example.ktop_food_app.App.model.data.entity.Food;
 import com.example.ktop_food_app.App.model.data.entity.Order;
 import com.example.ktop_food_app.App.model.data.entity.PaymentItem;
+
+import com.example.ktop_food_app.App.model.data.remote.FirebasePaymentData;
+import com.example.ktop_food_app.App.model.repository.PaymentRepository;
 import com.example.ktop_food_app.App.view.adapter.PaymentAdapter;
+import com.example.ktop_food_app.App.viewmodel.PaymentViewModel;
 import com.example.ktop_food_app.R;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+// Lớp PaymentActivity hiển thị giao diện thanh toán và xử lý tương tác người dùng
 public class PaymentActivity extends AppCompatActivity {
-    private TextView addressTextView, totalAmountTextView, paymentDetailsAmountTextView, discountAmountTextView,
+    // Các TextView để hiển thị thông tin địa chỉ, tên người dùng, tổng tiền, giảm giá, và số tiền cuối cùng
+    private TextView addressTextView, usernameTextView, totalAmountTextView, paymentDetailsAmountTextView, discountAmountTextView,
             totalPaymentDetailsTextView, totalPaymentAmountTextView;
+    // RecyclerView để hiển thị danh sách món ăn trong giỏ hàng
     private RecyclerView recyclerViewItems;
-    private RadioGroup paymentMethodGroup;
+    // LinearLayout để chọn phương thức thanh toán (Bank hoặc COD)
+    private LinearLayout bankOption, cashOption;
+    // ImageView để hiển thị dấu tích khi chọn phương thức thanh toán
+    private ImageView bankCheckmark, cashCheckmark;
+    // ImageView cho nút quay lại
+    private ImageView backArrow;
+    // Button để thực hiện thanh toán
     private Button paymentButton;
+    // EditText để nhập mã giảm giá
     private EditText voucherCodeInput;
+    // TextView để kích hoạt áp dụng mã giảm giá
     private TextView enterCodeLabel;
+    // Adapter cho RecyclerView
     private PaymentAdapter adapter;
-    private List<PaymentItem> paymentItems;
+    // Danh sách món ăn trong giỏ hàng
     private List<CartItem> cartItems;
-    private List<Food> foods;
-    private DatabaseReference databaseReference;
+    // ID của người dùng
     private String userId;
-    private double totalPrice = 0.0;
-    private double discount = 0.0;
+    // Phương thức thanh toán được chọn (mặc định là COD)
+    private String selectedPaymentMethod = "COD";
+    // ViewModel để quản lý dữ liệu và logic
+    private PaymentViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment);
 
-        // Khởi tạo các view với ID
+        // Khởi tạo các view từ layout
         addressTextView = findViewById(R.id.address_text_view);
+        usernameTextView = findViewById(R.id.username_text_view);
         totalAmountTextView = findViewById(R.id.total_amount_text_view);
         paymentDetailsAmountTextView = findViewById(R.id.payment_details_amount_text_view);
         discountAmountTextView = findViewById(R.id.discount_amount_text_view);
         totalPaymentDetailsTextView = findViewById(R.id.total_payment_details_text_view);
         totalPaymentAmountTextView = findViewById(R.id.total_payment_amount_text_view);
         recyclerViewItems = findViewById(R.id.recycler_view_items);
-        paymentMethodGroup = findViewById(R.id.payment_method_group);
+        bankOption = findViewById(R.id.bank_option);
+        cashOption = findViewById(R.id.cash_option);
+        bankCheckmark = findViewById(R.id.bank_checkmark);
+        cashCheckmark = findViewById(R.id.cash_checkmark);
+        backArrow = findViewById(R.id.back_arrow);
         paymentButton = findViewById(R.id.payment_button);
         voucherCodeInput = findViewById(R.id.voucher_code_input);
         enterCodeLabel = findViewById(R.id.enter_code_label);
 
-        // Khởi tạo RecyclerView
+        // Khởi tạo RecyclerView và adapter
         recyclerViewItems.setLayoutManager(new LinearLayoutManager(this));
-        paymentItems = new ArrayList<>();
-        adapter = new PaymentAdapter(paymentItems);
+        adapter = new PaymentAdapter(new ArrayList<>());
         recyclerViewItems.setAdapter(adapter);
 
-        // Khởi tạo Firebase với URL cụ thể
-        databaseReference = FirebaseDatabase.getInstance("https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app").getReference();
+        // Khởi tạo PaymentRepository và PaymentViewModel
+        FirebasePaymentData firebasePaymentData = new FirebasePaymentData();
+        PaymentRepository repository = new PaymentRepository(firebasePaymentData);
+        viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(Class<T> modelClass) {
+                return (T) new PaymentViewModel(repository);
+            }
+        }).get(PaymentViewModel.class);
 
         // Nhận dữ liệu từ Intent
         Intent intent = getIntent();
         cartItems = intent.getParcelableArrayListExtra("cartItems");
         userId = intent.getStringExtra("userId");
 
-        // Lấy thông tin người dùng và hiển thị giỏ hàng
-        loadUserInfo();
+        // Kiểm tra giỏ hàng và hiển thị dữ liệu
         if (cartItems != null && !cartItems.isEmpty()) {
-            displayCartItemsFromIntent(); // Hiển thị dữ liệu từ Intent thay vì tải lại từ Firebase
-            loadCartAndFoods(); // Tải thêm dữ liệu món ăn nếu cần
+            viewModel.loadUserInfo(userId); // Lấy thông tin người dùng
+            viewModel.displayCartItems(cartItems); // Hiển thị giỏ hàng
         } else {
             Toast.makeText(this, "Giỏ hàng trống!", Toast.LENGTH_SHORT).show();
-            finish();
+            finish(); // Thoát activity nếu giỏ hàng trống
         }
 
-        // Xử lý sự kiện nút thanh toán
-        paymentButton.setOnClickListener(v -> processPayment());
+        // Quan sát LiveData từ ViewModel để cập nhật giao diện
+        viewModel.getAddress().observe(this, address -> {
+            addressTextView.setText(address); // Cập nhật địa chỉ
+        });
 
-        // Xử lý sự kiện nhập mã giảm giá
-        enterCodeLabel.setOnClickListener(v -> applyVoucherCode());
-    }
+        viewModel.getUsername().observe(this, username -> {
+            usernameTextView.setText(username); // Cập nhật tên người dùng
+        });
 
-    private void loadUserInfo() {
-        databaseReference.child("users").child(userId).child("profile").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    String address = dataSnapshot.child("address").getValue(String.class);
-                    if (address != null && !address.isEmpty()) {
-                        addressTextView.setText(address);
-                    } else {
-                        addressTextView.setText("Chưa có địa chỉ, vui lòng cập nhật!");
-                    }
-                } else {
-                    Toast.makeText(PaymentActivity.this, "Không tìm thấy thông tin người dùng", Toast.LENGTH_SHORT).show();
-                }
+        viewModel.getTotalPrice().observe(this, price -> {
+            totalAmountTextView.setText(String.format("%,.0f đ", price)); // Hiển thị tổng tiền
+            paymentDetailsAmountTextView.setText(String.format("%,.0f đ", price)); // Hiển thị chi tiết tổng tiền
+            Double discount = viewModel.getDiscount().getValue();
+            if (discount != null) {
+                double finalAmount = price - discount;
+                totalPaymentDetailsTextView.setText(String.format("%,.0f đ", finalAmount)); // Tổng tiền sau giảm giá
+                totalPaymentAmountTextView.setText(String.format("%,.0f đ", finalAmount)); // Tổng tiền thanh toán
             }
+        });
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(PaymentActivity.this, "Lỗi khi tải thông tin: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+        viewModel.getDiscount().observe(this, discount -> {
+            discountAmountTextView.setText(String.format("%,.0f đ", discount)); // Hiển thị số tiền giảm giá
+        });
+
+        viewModel.getPaymentItems().observe(this, items -> {
+            adapter.updateItems(items); // Cập nhật danh sách món ăn trong RecyclerView
+        });
+
+        viewModel.getErrorMessage().observe(this, message -> {
+            if (message != null) {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show(); // Hiển thị thông báo lỗi
             }
+        });
+
+        viewModel.getPaymentSuccess().observe(this, success -> {
+            if (success != null && success) {
+                finish(); // Kết thúc activity nếu thanh toán thành công
+            }
+        });
+
+        // Thiết lập sự kiện click cho các nút
+        backArrow.setOnClickListener(v -> finish()); // Quay lại màn hình trước
+
+        bankOption.setOnClickListener(v -> {
+            selectedPaymentMethod = "Banking"; // Chọn phương thức thanh toán Banking
+            bankCheckmark.setVisibility(View.VISIBLE);
+            cashCheckmark.setVisibility(View.GONE);
+        });
+
+        cashOption.setOnClickListener(v -> {
+            selectedPaymentMethod = "COD"; // Chọn phương thức thanh toán COD
+            cashCheckmark.setVisibility(View.VISIBLE);
+            bankCheckmark.setVisibility(View.GONE);
+        });
+
+        paymentButton.setOnClickListener(v -> showPaymentConfirmationDialog()); // Hiển thị popup xác nhận thanh toán
+
+        enterCodeLabel.setOnClickListener(v -> {
+            String voucherCode = voucherCodeInput.getText().toString().trim();
+            viewModel.applyVoucherCode(voucherCode); // Áp dụng mã giảm giá
         });
     }
 
-    private void loadCartAndFoods() {
-        databaseReference.child("foods").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                foods = new ArrayList<>();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Food food = snapshot.getValue(Food.class);
-                    if (food != null) {
-                        foods.add(food);
-                    }
-                }
-                displayCartItems();
-            }
+    // Phương thức hiển thị popup xác nhận thanh toán
+    private void showPaymentConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Payment Confirmation");
 
+        // Lấy tổng tiền và giảm giá từ ViewModel
+        Double totalPrice = viewModel.getTotalPrice().getValue();
+        Double discount = viewModel.getDiscount().getValue();
+        double finalAmount = (totalPrice != null && discount != null) ? totalPrice - discount : 0;
+
+        // Tạo thông báo với phương thức thanh toán và tổng tiền
+        String message = String.format("Are you sure you want to pay for the %,.0fđ order using %s ",
+                 finalAmount,selectedPaymentMethod);
+        builder.setMessage(message);
+
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(PaymentActivity.this, "Lỗi khi tải danh sách món ăn: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            public void onClick(DialogInterface dialog, int which) {
+                processPayment(); // Tiến hành thanh toán nếu chọn "Yes"
             }
         });
-    }
-
-    private void displayCartItemsFromIntent() {
-        paymentItems.clear();
-        totalPrice = 0.0;
-        for (CartItem cartItem : cartItems) {
-            double itemTotalPrice = cartItem.getPrice() * cartItem.getQuantity();
-            totalPrice += itemTotalPrice;
-            PaymentItem paymentItem = new PaymentItem(
-                    cartItem.getName(),
-                    cartItem.getPrice(),
-                    cartItem.getQuantity(),
-                    itemTotalPrice,
-                    cartItem.getImagePath()
-            );
-            paymentItems.add(paymentItem);
-        }
-        adapter.notifyDataSetChanged();
-        updatePaymentDetails();
-    }
-
-    private void displayCartItems() {
-        paymentItems.clear();
-        totalPrice = 0.0;
-        if (cartItems != null && !cartItems.isEmpty()) {
-            for (CartItem cartItem : cartItems) {
-                for (Food food : foods) {
-                    if (food.getFoodId().equals(cartItem.getFoodId())) {
-                        double itemTotalPrice = food.getPrice() * cartItem.getQuantity();
-                        totalPrice += itemTotalPrice;
-                        PaymentItem paymentItem = new PaymentItem(
-                                food.getTitle(),
-                                food.getPrice(),
-                                cartItem.getQuantity(),
-                                itemTotalPrice,
-                                food.getImagePath()
-                        );
-                        paymentItems.add(paymentItem);
-                    }
-                }
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss(); // Đóng popup nếu chọn "No"
             }
-        }
-        adapter.notifyDataSetChanged();
-        updatePaymentDetails();
+        });
+        builder.setCancelable(false); // Không cho phép đóng popup bằng cách nhấn ra ngoài
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
-    private void updatePaymentDetails() {
-        totalAmountTextView.setText(String.format("%,.0f đ", totalPrice));
-        paymentDetailsAmountTextView.setText(String.format("%,.0f đ", totalPrice));
-        discountAmountTextView.setText(String.format("%,.0f đ", discount));
-        totalPaymentDetailsTextView.setText(String.format("%,.0f đ", totalPrice - discount));
-        totalPaymentAmountTextView.setText(String.format("%,.0f đ", totalPrice - discount));
-    }
-
-    private void applyVoucherCode() {
-        String voucherCode = voucherCodeInput.getText().toString().trim();
-        if (voucherCode.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập mã giảm giá!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (voucherCode.equals("DISCOUNT5000")) {
-            discount = 5000.0;
-            Toast.makeText(this, "Áp dụng mã giảm giá thành công!", Toast.LENGTH_SHORT).show();
-        } else {
-            discount = 0.0;
-            Toast.makeText(this, "Mã giảm giá không hợp lệ!", Toast.LENGTH_SHORT).show();
-        }
-        updatePaymentDetails();
-    }
-
+    // Phương thức xử lý thanh toán
     private void processPayment() {
+        // Kiểm tra nếu giỏ hàng rỗng
         if (cartItems == null || cartItems.isEmpty()) {
             Toast.makeText(this, "Giỏ hàng trống, vui lòng chọn món ăn trước!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        int selectedId = paymentMethodGroup.getCheckedRadioButtonId();
-        String paymentMethod = selectedId == R.id.radio_bank ? "Bank" : "COD";
-
+        // Tạo ID đơn hàng
         String orderId = "ORDER" + UUID.randomUUID().toString().substring(0, 8);
+        Double totalPrice = viewModel.getTotalPrice().getValue();
+        Double discount = viewModel.getDiscount().getValue();
+        // Kiểm tra nếu tổng tiền hoặc giảm giá không hợp lệ
+        if (totalPrice == null || discount == null) {
+            Toast.makeText(this, "Lỗi khi tính toán tổng giá trị đơn hàng!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Tạo đối tượng Order với thông tin đơn hàng
         Order order = new Order(
                 addressTextView.getText().toString(),
                 System.currentTimeMillis(),
                 discount,
                 cartItems,
                 orderId,
-                paymentMethod,
+                selectedPaymentMethod,
                 "pending",
                 totalPrice - discount,
                 userId
         );
 
-        databaseReference.child("orders").child(orderId).setValue(order)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show();
-                    databaseReference.child("users").child(userId).child("cart").removeValue();
-                    finish();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Lỗi khi đặt hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+        // Gọi ViewModel để xử lý thanh toán
+        viewModel.processPayment(order, userId);
     }
 }
