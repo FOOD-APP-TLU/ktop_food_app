@@ -49,11 +49,15 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.android.material:material:1.12.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
-    implementation(fileTree(mapOf(
-        "dir" to "E:\\zalopay",
-        "include" to listOf("*.aar", "*.jar"),
-        "exclude" to listOf("")
-    )))
+    implementation(
+        fileTree(
+            mapOf(
+                "dir" to "/home/mig/Code/App/fontend/TLU/zalopay",
+                "include" to listOf("*.aar", "*.jar"),
+                "exclude" to listOf("")
+            )
+        )
+    )
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
     implementation(libs.credentials)
