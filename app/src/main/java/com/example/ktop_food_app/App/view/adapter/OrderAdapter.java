@@ -67,6 +67,9 @@ public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         void onOrderClick(Order order);
 
         void onReorderClick(Order order);
+
+        void onReviewClick(Order order);
+
     }
 
     // ViewHolder cho Order History
@@ -83,7 +86,6 @@ public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             binding.txtOrderStatus.setText(order.getStatus());
             String allProduct = String.valueOf(order.getItems().size());
             binding.totalAllProduct.setText("(" + allProduct + " Products):");
-            String totalPriceAllProducts = String.valueOf(order.getTotalPrice());
             binding.totalAllProductPrice.setText(decimalFormat.format(order.getTotalPrice()));
 
             if (order.getItems() != null && !order.getItems().isEmpty()) {
@@ -97,6 +99,7 @@ public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             }
             binding.getRoot().setOnClickListener(v -> listener.onOrderClick(order));
             binding.btnReorder.setOnClickListener(v -> listener.onReorderClick(order));
+            binding.btnReviews.setOnClickListener(v -> listener.onReviewClick(order));
         }
     }
 
