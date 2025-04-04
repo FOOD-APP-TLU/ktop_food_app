@@ -12,8 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ktop_food_app"
         tools:targetApi="31">
+
+        <activity
+            android:name=".App.view.activity.OrderHistoryDetailActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="false" />
+        <activity
+            android:name=".App.view.activity.OrderHistoryActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="false" />
         <activity
             android:name=".App.view.activity.PaymentActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false" />
         <activity
             android:name=".App.view.activity.ProfileActivity"
@@ -46,7 +56,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

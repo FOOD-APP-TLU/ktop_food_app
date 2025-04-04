@@ -1,8 +1,9 @@
 package com.example.ktop_food_app.App.model.data.entity;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Order {
+public class Order implements Serializable {
     private String address;
     private long createdAt;
     private double discount;
