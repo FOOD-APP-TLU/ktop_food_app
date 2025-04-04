@@ -124,16 +124,16 @@ public class PaymentActivity extends AppCompatActivity {
         viewModel.getTotalPrice().observe(this, price -> {
             totalAmountTextView.setText(String.format("%,.0f đ", price)); // Hiển thị tổng tiền
             paymentDetailsAmountTextView.setText(String.format("%,.0f đ", price)); // Hiển thị chi tiết tổng tiền
-            Double discount = viewModel.getDiscount().getValue();
-            if (discount != null) {
-                double finalAmount = price - discount;
-                totalPaymentDetailsTextView.setText(String.format("%,.0f đ", finalAmount)); // Tổng tiền sau giảm giá
-                totalPaymentAmountTextView.setText(String.format("%,.0f đ", finalAmount)); // Tổng tiền thanh toán
-            }
         });
 
         viewModel.getDiscount().observe(this, discount -> {
             discountAmountTextView.setText(String.format("%,.0f đ", discount)); // Hiển thị số tiền giảm giá
+        });
+
+        // Thêm observer mới để theo dõi finalPrice
+        viewModel.getFinalPrice().observe(this, finalPrice -> {
+            totalPaymentDetailsTextView.setText(String.format("%,.0f đ", finalPrice)); // Cập nhật tổng tiền sau giảm giá
+            totalPaymentAmountTextView.setText(String.format("%,.0f đ", finalPrice)); // Cập nhật tổng tiền thanh toán
         });
 
         viewModel.getPaymentItems().observe(this, items -> {
@@ -180,14 +180,13 @@ public class PaymentActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Payment Confirmation");
 
-        // Lấy tổng tiền và giảm giá từ ViewModel
-        Double totalPrice = viewModel.getTotalPrice().getValue();
-        Double discount = viewModel.getDiscount().getValue();
-        double finalAmount = (totalPrice != null && discount != null) ? totalPrice - discount : 0;
+        // Lấy tổng tiền sau giảm giá từ ViewModel
+        Double finalAmount = viewModel.getFinalPrice().getValue();
+        if (finalAmount == null) finalAmount = 0.0;
 
         // Tạo thông báo với phương thức thanh toán và tổng tiền
         String message = String.format("Are you sure you want to pay for the %,.0fđ order using %s ",
-                 finalAmount,selectedPaymentMethod);
+                finalAmount, selectedPaymentMethod);
         builder.setMessage(message);
 
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -219,22 +218,27 @@ public class PaymentActivity extends AppCompatActivity {
         String orderId = "ORDER" + UUID.randomUUID().toString().substring(0, 8);
         Double totalPrice = viewModel.getTotalPrice().getValue();
         Double discount = viewModel.getDiscount().getValue();
-        // Kiểm tra nếu tổng tiền hoặc giảm giá không hợp lệ
-        if (totalPrice == null || discount == null) {
+        Double finalPrice = viewModel.getFinalPrice().getValue();
+
+// Kiểm tra nếu các giá trị không hợp lệ
+        if (totalPrice == null || discount == null || finalPrice == null) {
             Toast.makeText(this, "Lỗi khi tính toán tổng giá trị đơn hàng!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Tạo đối tượng Order với thông tin đơn hàng
+// Đảm bảo discount không vượt quá totalPrice khi tạo Order
+        double actualDiscount = Math.min(discount, totalPrice);
+
+// Tạo đối tượng Order với thông tin đơn hàng
         Order order = new Order(
                 addressTextView.getText().toString(),
                 System.currentTimeMillis(),
-                discount,
+                actualDiscount, // Sử dụng actualDiscount thay vì discount
                 cartItems,
                 orderId,
                 selectedPaymentMethod,
                 "pending",
-                totalPrice - discount,
+                finalPrice,
                 userId
         );
 

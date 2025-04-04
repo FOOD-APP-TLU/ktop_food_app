@@ -1,6 +1,5 @@
 package com.example.ktop_food_app.App.viewmodel;
 
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -9,7 +8,6 @@ import com.example.ktop_food_app.App.model.data.entity.Order;
 import com.example.ktop_food_app.App.model.data.entity.PaymentItem;
 import com.example.ktop_food_app.App.model.data.remote.FirebasePaymentData;
 import com.example.ktop_food_app.App.model.repository.PaymentRepository;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +23,8 @@ public class PaymentViewModel extends ViewModel {
     private final MutableLiveData<Double> totalPrice = new MutableLiveData<>(0.0);
     // LiveData để lưu trữ và thông báo thay đổi về giá trị giảm giá
     private final MutableLiveData<Double> discount = new MutableLiveData<>(0.0);
+    // LiveData để lưu trữ và thông báo thay đổi về tổng tiền sau khi áp dụng giảm giá
+    private final MutableLiveData<Double> finalPrice = new MutableLiveData<>(0.0);
     // LiveData để lưu trữ và thông báo thay đổi về danh sách món ăn trong giỏ hàng
     private final MutableLiveData<List<PaymentItem>> paymentItems = new MutableLiveData<>(new ArrayList<>());
     // LiveData để thông báo lỗi hoặc thông điệp thành công
@@ -57,6 +57,11 @@ public class PaymentViewModel extends ViewModel {
         return discount;
     }
 
+    // Getter để PaymentActivity quan sát tổng tiền sau giảm giá
+    public LiveData<Double> getFinalPrice() {
+        return finalPrice;
+    }
+
     // Getter để PaymentActivity quan sát danh sách món ăn
     public LiveData<List<PaymentItem>> getPaymentItems() {
         return paymentItems;
@@ -70,6 +75,17 @@ public class PaymentViewModel extends ViewModel {
     // Getter để PaymentActivity quan sát trạng thái thanh toán
     public LiveData<Boolean> getPaymentSuccess() {
         return paymentSuccess;
+    }
+
+    // Phương thức cập nhật giá cuối cùng
+    private void updateFinalPrice() {
+        Double price = totalPrice.getValue();
+        Double disc = discount.getValue();
+        if (price != null && disc != null) {
+            // Đảm bảo finalPrice không nhỏ hơn 0
+            double finalAmount = Math.max(0, price - disc);
+            finalPrice.setValue(finalAmount);
+        }
     }
 
     // Phương thức lấy thông tin người dùng từ repository
@@ -109,6 +125,7 @@ public class PaymentViewModel extends ViewModel {
         // Cập nhật danh sách món ăn và tổng tiền vào LiveData
         paymentItems.setValue(items);
         totalPrice.setValue(price);
+        updateFinalPrice(); // Cập nhật giá cuối cùng
     }
 
     // Phương thức áp dụng mã giảm giá
@@ -124,6 +141,7 @@ public class PaymentViewModel extends ViewModel {
             public void onVoucherApplied(double appliedDiscount) {
                 // Cập nhật giá trị giảm giá và thông báo thành công
                 discount.setValue(appliedDiscount);
+                updateFinalPrice(); // Cập nhật giá cuối cùng sau khi áp dụng giảm giá
                 errorMessage.setValue("Áp dụng mã giảm giá thành công!");
             }
 
@@ -131,6 +149,7 @@ public class PaymentViewModel extends ViewModel {
             public void onVoucherError(String error) {
                 // Nếu mã không hợp lệ, đặt giảm giá về 0 và thông báo lỗi
                 discount.setValue(0.0);
+                updateFinalPrice(); // Cập nhật giá cuối cùng
                 errorMessage.setValue(error);
             }
         });
