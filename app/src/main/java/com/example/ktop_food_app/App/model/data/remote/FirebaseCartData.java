@@ -14,7 +14,9 @@ public class FirebaseCartData {
     private final DatabaseReference cartRef;
 
     public FirebaseCartData(String userId) {
-        this.cartRef = FirebaseDatabase.getInstance("https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("users")
+        this.cartRef = FirebaseDatabase
+                .getInstance("https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app")
+                .getReference("users")
                 .child(userId)
                 .child("cart")
                 .child("items");

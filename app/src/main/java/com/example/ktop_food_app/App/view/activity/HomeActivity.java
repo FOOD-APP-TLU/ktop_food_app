@@ -155,11 +155,12 @@ public class HomeActivity extends AppCompatActivity {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_profile) {
                 Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
-                startActivity(intent); // Sử dụng startActivity
+                startActivity(intent);
             } else if (itemId == R.id.nav_track_order) {
                 Toast.makeText(this, "Navigating to Track Order Activity", Toast.LENGTH_SHORT).show();
             } else if (itemId == R.id.nav_order_history) {
-                Toast.makeText(this, "Navigating to Order History Activity", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(HomeActivity.this, OrderHistoryActivity.class);
+                startActivity(intent);
             }
             binding.drawerLayout.closeDrawer(GravityCompat.START);
             return true;
