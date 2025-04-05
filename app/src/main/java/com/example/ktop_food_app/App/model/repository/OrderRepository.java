@@ -10,7 +10,8 @@ public class OrderRepository {
     }
 
     public void getOrderList(FirebaseOrderData.OrderCallback callback) {
+
         firebaseOrderData.getOrders(callback);
     }
-
 }
+

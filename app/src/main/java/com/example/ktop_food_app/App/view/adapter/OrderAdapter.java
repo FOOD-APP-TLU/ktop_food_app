@@ -10,12 +10,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.ktop_food_app.App.model.data.entity.CartItem;
 import com.example.ktop_food_app.App.model.data.entity.Order;
+import com.example.ktop_food_app.databinding.ItemTrackOrdersBinding;
 import com.example.ktop_food_app.databinding.ItemOrderHistoryBinding;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
 
+public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHolder> {
 public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int VIEW_TYPE_ORDER_HISTORY = 1; // Loại cho Order History
@@ -32,7 +34,7 @@ public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         this.listener = listener;
         DecimalFormatSymbols symbols = new DecimalFormatSymbols();
         symbols.setGroupingSeparator('.');
-        decimalFormat = new DecimalFormat("#,###d", symbols);
+        decimalFormat = new DecimalFormat("#,###", symbols);
     }
 
     @Override
@@ -43,6 +45,16 @@ public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     @NonNull
     @Override
+    public OrderViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ItemTrackOrdersBinding binding = ItemTrackOrdersBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+        return new OrderViewHolder(binding);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
+        Order order = orderList.get(position);
+        holder.bind(order);
+      
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // Chỉ xử lý VIEW_TYPE_ORDER_HISTORY
         ItemOrderHistoryBinding binding = ItemOrderHistoryBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
@@ -55,7 +67,7 @@ public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         if (holder instanceof OrderHistoryViewHolder) {
             ((OrderHistoryViewHolder) holder).bind(order);
         }
-        // Phần TrackOrder đã bị comment, không cần xử lý ở đây
+
     }
 
     @Override
@@ -63,6 +75,10 @@ public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return orderList.size();
     }
 
+    public class OrderViewHolder extends RecyclerView.ViewHolder {
+        private final ItemTrackOrdersBinding binding;
+
+        public OrderViewHolder(ItemTrackOrdersBinding binding) {
     public interface OnOrderClickListener {
         void onOrderClick(Order order);
 
@@ -85,6 +101,29 @@ public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             binding.txtOrderId.setText(order.getOrderId());
             binding.txtOrderStatus.setText(order.getStatus());
             String allProduct = String.valueOf(order.getItems().size());
+            binding.totalAllProduct.setText("(" + allProduct+ " " + "Products"+"):");
+            binding.totalAllProductPrice.setText(decimalFormat.format(order.getTotalPrice()) + " d");
+
+            if(order.getItems() != null && !order.getItems().isEmpty()) {
+                CartItem item = order.getItems().get(0);
+                // Load ảnh của sản phẩm đầu tiên vào ImageView
+                Glide.with(context)
+                        .load(item.getImagePath())
+                        .into(binding.productFirstImage);
+                binding.productName.setText(item.getName());
+                String quanTiTyOfFirstProduct = String.valueOf(item.getQuantity());
+                binding.productQuantity.setText("x" + quanTiTyOfFirstProduct);
+            }
+
+            // Xử lý sự kiện click item
+            binding.getRoot().setOnClickListener(v -> listener.onOrderClick(order));
+        }
+    }
+
+    public interface OnOrderClickListener {
+        void onOrderClick(Order order);
+    }
+}
             binding.totalAllProduct.setText("(" + allProduct + " Products):");
             binding.totalAllProductPrice.setText(decimalFormat.format(order.getTotalPrice()));
 

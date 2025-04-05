@@ -21,7 +21,6 @@ public class FirebaseOrderData {
         orderRef = database.getReference("orders");
     }
 
-    // Fetch danh sách đơn hàng
     public void getOrders(OrderCallback callback) {
         String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         orderRef.orderByChild("uid").equalTo(currentUserUid).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -48,7 +47,6 @@ public class FirebaseOrderData {
     // Interface callback để xử lý dữ liệu trả về
     public interface OrderCallback {
         void onSuccess(List<Order> orderList);
-
         void onFailure(String errorMessage);
     }
 }
