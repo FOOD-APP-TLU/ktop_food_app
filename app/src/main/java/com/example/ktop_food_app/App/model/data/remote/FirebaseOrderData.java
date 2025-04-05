@@ -10,7 +10,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,8 +21,7 @@ public class FirebaseOrderData {
         orderRef = database.getReference("orders");
     }
 
-    // Fetch danh sách đơn hàng
-    public void fetchOrders(OrderCallback callback) {
+    public void getOrders(OrderCallback callback) {
         String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         orderRef.orderByChild("uid").equalTo(currentUserUid).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -32,7 +30,7 @@ public class FirebaseOrderData {
                 for (DataSnapshot data : snapshot.getChildren()) {
                     Order order = data.getValue(Order.class);
                     if (order != null) {
-                        order.setOrderId(data.getKey()); // Gán ID từ Firebase
+                        order.setOrderId(data.getKey());
                         orderList.add(order);
                     }
                 }
@@ -51,5 +49,4 @@ public class FirebaseOrderData {
         void onSuccess(List<Order> orderList);
         void onFailure(String errorMessage);
     }
-
 }

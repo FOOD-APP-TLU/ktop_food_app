@@ -1,209 +1,229 @@
 package com.example.ktop_food_app.App.view.activity;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.StrictMode;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.ktop_food_app.App.model.data.entity.CartItem;
-import com.example.ktop_food_app.App.model.data.entity.Food;
 import com.example.ktop_food_app.App.model.data.entity.Order;
-import com.example.ktop_food_app.App.model.data.entity.PaymentItem;
+import com.example.ktop_food_app.App.model.data.remote.FirebasePaymentData;
+import com.example.ktop_food_app.App.model.repository.PaymentRepository;
 import com.example.ktop_food_app.App.view.adapter.PaymentAdapter;
+import com.example.ktop_food_app.App.viewmodel.PaymentViewModel;
+import com.example.ktop_food_app.App.zalopayapi.Api.CreateOrder;
 import com.example.ktop_food_app.R;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import vn.zalopay.sdk.Environment;
+import vn.zalopay.sdk.ZaloPayError;
+import vn.zalopay.sdk.ZaloPaySDK;
+import vn.zalopay.sdk.listeners.PayOrderListener;
+
 public class PaymentActivity extends AppCompatActivity {
-    private TextView addressTextView, totalAmountTextView, paymentDetailsAmountTextView, discountAmountTextView,
-            totalPaymentDetailsTextView, totalPaymentAmountTextView;
+    private TextView addressTextView, usernameTextView, totalAmountTextView, paymentDetailsAmountTextView,
+            discountAmountTextView, totalPaymentDetailsTextView, totalPaymentAmountTextView;
     private RecyclerView recyclerViewItems;
-    private RadioGroup paymentMethodGroup;
+    private LinearLayout bankOption, cashOption;
+    private ImageView bankCheckmark, cashCheckmark, backArrow;
     private Button paymentButton;
     private EditText voucherCodeInput;
     private TextView enterCodeLabel;
     private PaymentAdapter adapter;
-    private List<PaymentItem> paymentItems;
     private List<CartItem> cartItems;
-    private List<Food> foods;
-    private DatabaseReference databaseReference;
     private String userId;
-    private double totalPrice = 0.0;
-    private double discount = 0.0;
+    private String selectedPaymentMethod = "COD";
+    private PaymentViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment);
 
-        // Khởi tạo các view với ID
+        // Cho phép thực thi mạng trên luồng chính (chỉ dùng cho demo)
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
+        // Khởi tạo ZaloPay SDK
+        ZaloPaySDK.init(2553, Environment.SANDBOX);
+
+        // Khởi tạo các view
         addressTextView = findViewById(R.id.address_text_view);
+        usernameTextView = findViewById(R.id.username_text_view);
         totalAmountTextView = findViewById(R.id.total_amount_text_view);
         paymentDetailsAmountTextView = findViewById(R.id.payment_details_amount_text_view);
         discountAmountTextView = findViewById(R.id.discount_amount_text_view);
         totalPaymentDetailsTextView = findViewById(R.id.total_payment_details_text_view);
         totalPaymentAmountTextView = findViewById(R.id.total_payment_amount_text_view);
         recyclerViewItems = findViewById(R.id.recycler_view_items);
-        paymentMethodGroup = findViewById(R.id.payment_method_group);
+        bankOption = findViewById(R.id.bank_option);
+        cashOption = findViewById(R.id.cash_option);
+        bankCheckmark = findViewById(R.id.bank_checkmark);
+        cashCheckmark = findViewById(R.id.cash_checkmark);
+        backArrow = findViewById(R.id.back_arrow);
         paymentButton = findViewById(R.id.payment_button);
         voucherCodeInput = findViewById(R.id.voucher_code_input);
         enterCodeLabel = findViewById(R.id.enter_code_label);
 
-        // Khởi tạo RecyclerView
+        // Khởi tạo RecyclerView và adapter
         recyclerViewItems.setLayoutManager(new LinearLayoutManager(this));
-        paymentItems = new ArrayList<>();
-        adapter = new PaymentAdapter(paymentItems);
+        adapter = new PaymentAdapter(new ArrayList<>());
         recyclerViewItems.setAdapter(adapter);
 
-        // Khởi tạo Firebase với URL cụ thể
-        databaseReference = FirebaseDatabase.getInstance("https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app").getReference();
+        // Khởi tạo PaymentRepository và PaymentViewModel
+        FirebasePaymentData firebasePaymentData = new FirebasePaymentData();
+        PaymentRepository repository = new PaymentRepository(firebasePaymentData);
+        viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @Override
+            public <T extends androidx.lifecycle.ViewModel> T create(Class<T> modelClass) {
+                return (T) new PaymentViewModel(repository);
+            }
+        }).get(PaymentViewModel.class);
 
         // Nhận dữ liệu từ Intent
         Intent intent = getIntent();
         cartItems = intent.getParcelableArrayListExtra("cartItems");
         userId = intent.getStringExtra("userId");
 
-        // Lấy thông tin người dùng và hiển thị giỏ hàng
-        loadUserInfo();
+        // Kiểm tra giỏ hàng
         if (cartItems != null && !cartItems.isEmpty()) {
-            displayCartItemsFromIntent(); // Hiển thị dữ liệu từ Intent thay vì tải lại từ Firebase
-            loadCartAndFoods(); // Tải thêm dữ liệu món ăn nếu cần
+            viewModel.loadUserInfo(userId);
+            viewModel.displayCartItems(cartItems);
         } else {
             Toast.makeText(this, "Giỏ hàng trống!", Toast.LENGTH_SHORT).show();
             finish();
         }
 
-        // Xử lý sự kiện nút thanh toán
-        paymentButton.setOnClickListener(v -> processPayment());
+        // Quan sát LiveData
+        viewModel.getAddress().observe(this, address -> addressTextView.setText(address));
+        viewModel.getUsername().observe(this, username -> usernameTextView.setText(username));
+        viewModel.getTotalPrice().observe(this, price -> {
+            totalAmountTextView.setText(String.format("%,.0f đ", price));
+            paymentDetailsAmountTextView.setText(String.format("%,.0f đ", price));
+        });
+        viewModel.getDiscount().observe(this, discount -> discountAmountTextView.setText(String.format("%,.0f đ", discount)));
+        viewModel.getFinalPrice().observe(this, finalPrice -> {
+            totalPaymentDetailsTextView.setText(String.format("%,.0f đ", finalPrice));
+            totalPaymentAmountTextView.setText(String.format("%,.0f đ", finalPrice));
+        });
+        viewModel.getPaymentItems().observe(this, adapter::updateItems);
+        viewModel.getErrorMessage().observe(this, message -> {
+            if (message != null) Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        });
+        viewModel.getPaymentSuccess().observe(this, success -> {
+            if (success != null && success) finish();
+        });
 
-        // Xử lý sự kiện nhập mã giảm giá
-        enterCodeLabel.setOnClickListener(v -> applyVoucherCode());
-    }
-
-    private void loadUserInfo() {
-        databaseReference.child("users").child(userId).child("profile").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    String address = dataSnapshot.child("address").getValue(String.class);
-                    if (address != null && !address.isEmpty()) {
-                        addressTextView.setText(address);
-                    } else {
-                        addressTextView.setText("Chưa có địa chỉ, vui lòng cập nhật!");
-                    }
-                } else {
-                    Toast.makeText(PaymentActivity.this, "Không tìm thấy thông tin người dùng", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(PaymentActivity.this, "Lỗi khi tải thông tin: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+        // Thiết lập sự kiện click
+        backArrow.setOnClickListener(v -> finish());
+        bankOption.setOnClickListener(v -> {
+            selectedPaymentMethod = "Banking(Zalo Pay)";
+            bankCheckmark.setVisibility(View.VISIBLE);
+            cashCheckmark.setVisibility(View.GONE);
+        });
+        cashOption.setOnClickListener(v -> {
+            selectedPaymentMethod = "COD";
+            cashCheckmark.setVisibility(View.VISIBLE);
+            bankCheckmark.setVisibility(View.GONE);
+        });
+        paymentButton.setOnClickListener(v -> showPaymentConfirmationDialog());
+        enterCodeLabel.setOnClickListener(v -> {
+            String voucherCode = voucherCodeInput.getText().toString().trim();
+            viewModel.applyVoucherCode(voucherCode);
         });
     }
 
-    private void loadCartAndFoods() {
-        databaseReference.child("foods").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                foods = new ArrayList<>();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Food food = snapshot.getValue(Food.class);
-                    if (food != null) {
-                        foods.add(food);
-                    }
-                }
-                displayCartItems();
-            }
+    private void showPaymentConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Xác nhận thanh toán");
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(PaymentActivity.this, "Lỗi khi tải danh sách món ăn: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+        Double finalAmount = viewModel.getFinalPrice().getValue();
+        if (finalAmount == null) finalAmount = 0.0;
+
+        String message = String.format("Bạn có chắc chắn muốn thanh toán %,.0fđ bằng %s không?",
+                finalAmount, selectedPaymentMethod);
+        builder.setMessage(message);
+
+        Double finalAmount1 = finalAmount;
+        builder.setPositiveButton("Có", (dialog, which) -> {
+            if ("Banking(Zalo Pay)".equals(selectedPaymentMethod)) {
+                processZaloPayPayment(String.valueOf(finalAmount1.longValue()));
+            } else {
+                processPayment();
             }
         });
+        builder.setNegativeButton("Không", (dialog, which) -> dialog.dismiss());
+        builder.setCancelable(false);
+        builder.create().show();
     }
 
-    private void displayCartItemsFromIntent() {
-        paymentItems.clear();
-        totalPrice = 0.0;
-        for (CartItem cartItem : cartItems) {
-            double itemTotalPrice = cartItem.getPrice() * cartItem.getQuantity();
-            totalPrice += itemTotalPrice;
-            PaymentItem paymentItem = new PaymentItem(
-                    cartItem.getName(),
-                    cartItem.getPrice(),
-                    cartItem.getQuantity(),
-                    itemTotalPrice,
-                    cartItem.getImagePath()
-            );
-            paymentItems.add(paymentItem);
-        }
-        adapter.notifyDataSetChanged();
-        updatePaymentDetails();
-    }
+    private void processZaloPayPayment(String amount) {
+        CreateOrder orderApi = new CreateOrder();
+        try {
+            JSONObject data = orderApi.createOrder(amount);
+            String code = data.getString("return_code");
+//            Toast.makeText(this, "return_code: " + code, Toast.LENGTH_SHORT).show();
 
-    private void displayCartItems() {
-        paymentItems.clear();
-        totalPrice = 0.0;
-        if (cartItems != null && !cartItems.isEmpty()) {
-            for (CartItem cartItem : cartItems) {
-                for (Food food : foods) {
-                    if (food.getFoodId().equals(cartItem.getFoodId())) {
-                        double itemTotalPrice = food.getPrice() * cartItem.getQuantity();
-                        totalPrice += itemTotalPrice;
-                        PaymentItem paymentItem = new PaymentItem(
-                                food.getTitle(),
-                                food.getPrice(),
-                                cartItem.getQuantity(),
-                                itemTotalPrice,
-                                food.getImagePath()
-                        );
-                        paymentItems.add(paymentItem);
+            if (code.equals("1")) {
+                String zpTransToken = data.getString("zp_trans_token");
+                ZaloPaySDK.getInstance().payOrder(this, zpTransToken, "zaloapp://app", new PayOrderListener() {
+                    @Override
+                    public void onPaymentSucceeded(String transactionId, String transToken, String appTransID) {
+                        runOnUiThread(() -> {
+                            new AlertDialog.Builder(PaymentActivity.this)
+                                    .setTitle("Thanh toán thành công")
+//                                    .setMessage(String.format("TransactionId: %s - TransToken: %s", transactionId, transToken))
+                                    .setPositiveButton("OK", (dialog, which) -> processPayment())
+                                    .setNegativeButton("Hủy", null)
+                                    .show();
+                        });
                     }
-                }
+
+                    @Override
+                    public void onPaymentCanceled(String zpTransToken, String appTransID) {
+                        new AlertDialog.Builder(PaymentActivity.this)
+                                .setTitle("Hủy thanh toán")
+//                                .setMessage(String.format("zpTransToken: %s", zpTransToken))
+                                .setPositiveButton("OK", (dialog, which) -> {})
+                                .setNegativeButton("Hủy", null)
+                                .show();
+                    }
+
+                    @Override
+                    public void onPaymentError(ZaloPayError zaloPayError, String zpTransToken, String appTransID) {
+                        new AlertDialog.Builder(PaymentActivity.this)
+                                .setTitle("Thanh toán thất bại")
+//                                .setMessage(String.format("ZaloPayErrorCode: %s - TransToken: %s", zaloPayError.toString(), zpTransToken))
+                                .setPositiveButton("OK", (dialog, which) -> {})
+                                .setNegativeButton("Hủy", null)
+                                .show();
+                    }
+                });
+            } else {
+                Toast.makeText(this, "Tạo đơn hàng thất bại", Toast.LENGTH_SHORT).show();
             }
+        } catch (Exception e) {
+            Log.e("ZaloPayError", "Lỗi khi tạo đơn hàng: " + e.getMessage());
+            Toast.makeText(this, "Lỗi hệ thống, vui lòng thử lại", Toast.LENGTH_SHORT).show();
         }
-        adapter.notifyDataSetChanged();
-        updatePaymentDetails();
-    }
-
-    private void updatePaymentDetails() {
-        totalAmountTextView.setText(String.format("%,.0f đ", totalPrice));
-        paymentDetailsAmountTextView.setText(String.format("%,.0f đ", totalPrice));
-        discountAmountTextView.setText(String.format("%,.0f đ", discount));
-        totalPaymentDetailsTextView.setText(String.format("%,.0f đ", totalPrice - discount));
-        totalPaymentAmountTextView.setText(String.format("%,.0f đ", totalPrice - discount));
-    }
-
-    private void applyVoucherCode() {
-        String voucherCode = voucherCodeInput.getText().toString().trim();
-        if (voucherCode.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập mã giảm giá!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (voucherCode.equals("DISCOUNT5000")) {
-            discount = 5000.0;
-            Toast.makeText(this, "Áp dụng mã giảm giá thành công!", Toast.LENGTH_SHORT).show();
-        } else {
-            discount = 0.0;
-            Toast.makeText(this, "Mã giảm giá không hợp lệ!", Toast.LENGTH_SHORT).show();
-        }
-        updatePaymentDetails();
     }
 
     private void processPayment() {
@@ -212,30 +232,35 @@ public class PaymentActivity extends AppCompatActivity {
             return;
         }
 
-        int selectedId = paymentMethodGroup.getCheckedRadioButtonId();
-        String paymentMethod = selectedId == R.id.radio_bank ? "Bank" : "COD";
-
         String orderId = "ORDER" + UUID.randomUUID().toString().substring(0, 8);
+        Double totalPrice = viewModel.getTotalPrice().getValue();
+        Double discount = viewModel.getDiscount().getValue();
+        Double finalPrice = viewModel.getFinalPrice().getValue();
+
+        if (totalPrice == null || discount == null || finalPrice == null) {
+            Toast.makeText(this, "Lỗi khi tính toán tổng giá trị đơn hàng!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        double actualDiscount = Math.min(discount, totalPrice);
         Order order = new Order(
                 addressTextView.getText().toString(),
                 System.currentTimeMillis(),
-                discount,
+                actualDiscount,
                 cartItems,
                 orderId,
-                paymentMethod,
+                selectedPaymentMethod,
                 "pending",
-                totalPrice - discount,
+                finalPrice,
                 userId
         );
 
-        databaseReference.child("orders").child(orderId).setValue(order)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show();
-                    databaseReference.child("users").child(userId).child("cart").removeValue();
-                    finish();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Lỗi khi đặt hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+        viewModel.processPayment(order, userId);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        ZaloPaySDK.getInstance().onResult(intent);
     }
 }

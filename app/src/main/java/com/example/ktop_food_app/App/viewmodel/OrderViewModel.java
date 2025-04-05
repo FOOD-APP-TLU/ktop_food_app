@@ -20,11 +20,11 @@ public class OrderViewModel extends ViewModel {
         loadOrderList();
     }
 
-    public MutableLiveData<List<Order>> getOrderListLiveData () {
+    public MutableLiveData<List<Order>> getOrderListLiveData() {
         return orderListLiveData;
     }
 
-    public MutableLiveData<String> getErrorMassage() {
+    public MutableLiveData<String> getErrorMassage() {W
         return errorMassage;
     }
 
@@ -45,6 +45,4 @@ public class OrderViewModel extends ViewModel {
     public void reloadOrders() {
         loadOrderList(); // Gọi lại như ban đầu
     }
-
-
 }

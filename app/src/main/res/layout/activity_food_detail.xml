@@ -254,7 +254,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/annapurna_sil_bold"
-                    android:text="54.0000 đ"
+                    android:text="54.0000 d"
                     android:textColor="@color/text_price_food"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -290,8 +290,6 @@
                     android:textColor="#FFFFFF"
                     android:textSize="20dp" />
             </LinearLayout>
-
-
         </LinearLayout>
     </RelativeLayout>
 </LinearLayout>

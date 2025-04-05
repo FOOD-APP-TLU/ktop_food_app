@@ -49,6 +49,15 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.android.material:material:1.12.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation(
+        fileTree(
+            mapOf(
+                "dir" to "/home/mig/Code/App/fontend/TLU/zalopay",
+                "include" to listOf("*.aar", "*.jar"),
+                "exclude" to listOf("")
+            )
+        )
+    )
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
     implementation(libs.credentials)
@@ -63,4 +72,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    implementation("com.squareup.okhttp3:okhttp:4.6.0")
+    implementation("commons-codec:commons-codec:1.14")
 }

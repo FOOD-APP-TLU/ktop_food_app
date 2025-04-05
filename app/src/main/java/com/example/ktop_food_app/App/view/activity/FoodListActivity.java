@@ -3,17 +3,19 @@ package com.example.ktop_food_app.App.view.activity;
 import android.os.Bundle;
 import android.view.ViewGroup;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.ktop_food_app.App.model.data.entity.Category;
 import com.example.ktop_food_app.App.model.data.entity.Food;
 import com.example.ktop_food_app.App.view.adapter.FoodAdapter;
 import com.example.ktop_food_app.App.viewmodel.FoodViewModel;
-import com.example.ktop_food_app.R;
 import com.example.ktop_food_app.databinding.ActivityFoodListBinding;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,7 +52,7 @@ public class FoodListActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         binding.recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
-        foodAdapter = new FoodAdapter(this, new ArrayList<>());
+        foodAdapter = new FoodAdapter(this, new ArrayList<>(), null);
         binding.recyclerView.setAdapter(foodAdapter);
         binding.recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, 16, true));
     }
