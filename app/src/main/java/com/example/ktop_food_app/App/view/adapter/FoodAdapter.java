@@ -16,48 +16,48 @@ import com.example.ktop_food_app.databinding.ItemFoodBinding;
 import java.util.ArrayList;
 import java.util.List;
 
-// Adapter de hien thi danh sach mon an trong RecyclerView
+// Interface để thông báo khi một món ăn được chọn
+
 public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder> {
 
-    private final Context context; // Them bien context
-    // Danh sach cac mon an
+    private final Context context;
+    private final OnFoodClickListener onFoodClickListener;
     private List<Food> foodList;
 
-    // Constructor nhan context va danh sach mon an
-    public FoodAdapter(Context context, List<Food> foodList) {
+    // Constructor nhận context, danh sách món ăn, và listener
+    public FoodAdapter(Context context, List<Food> foodList, OnFoodClickListener listener) {
         this.context = context;
-        // Neu danh sach khong null, gan vao foodList; neu null, tao danh sach rong
         this.foodList = foodList != null ? foodList : new ArrayList<>();
+        this.onFoodClickListener = new OnFoodClickListener() {
+            @Override
+            public void onFoodClick(Food food) {
+                // Truyền đối tượng Food và mở FoodDetailActivity trực tiếp
+                Intent intent = new Intent(context, FoodDetailActivity.class);
+                intent.putExtra("food", food);
+                context.startActivity(intent);
+            }
+        };
     }
 
-    // Phuong thuc cap nhat danh sach mon an
+    // Phương thức cập nhật danh sách món ăn
     public void setFoodList(List<Food> newFoodList) {
-        // Neu danh sach moi khong null, gan vao foodList; neu null, tao danh sach rong
         this.foodList = newFoodList != null ? newFoodList : new ArrayList<>();
-        // Thong bao cho RecyclerView rang du lieu da thay doi de cap nhat giao dien
         notifyDataSetChanged();
     }
 
-    // Tao ViewHolder moi cho moi item trong RecyclerView
     @NonNull
     @Override
     public FoodViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Su dung View Binding de inflate layout item_food.xml
         ItemFoodBinding binding = ItemFoodBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        // Tra ve ViewHolder moi voi binding va context
-        return new FoodViewHolder(binding, context);
+        return new FoodViewHolder(binding, context, onFoodClickListener);
     }
 
-    // Gan du lieu vao ViewHolder tai vi tri position
     @Override
     public void onBindViewHolder(@NonNull FoodViewHolder holder, int position) {
-        // Lay mon an tai vi tri position
         Food food = foodList.get(position);
-        // Gan du lieu vao cac view trong ViewHolder
         holder.bind(food);
     }
 
-    // Tra ve so luong item trong danh sach
     @Override
     public int getItemCount() {
         return foodList.size();
@@ -68,35 +68,35 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         notifyDataSetChanged();
     }
 
-    // ViewHolder de giu cac view cua moi item trong RecyclerView
+    public interface OnFoodClickListener {
+        void onFoodClick(Food food);
+    }
+
     public static class FoodViewHolder extends RecyclerView.ViewHolder {
-        // Binding cho layout item_food.xml
         private final ItemFoodBinding binding;
         private final Context context;
+        private final OnFoodClickListener onFoodClickListener;
 
-        // Constructor nhan binding va context
-        public FoodViewHolder(@NonNull ItemFoodBinding binding, Context context) {
+        public FoodViewHolder(@NonNull ItemFoodBinding binding, Context context, OnFoodClickListener listener) {
             super(binding.getRoot());
             this.binding = binding;
             this.context = context;
+            this.onFoodClickListener = listener;
         }
 
-        // Phuong thuc gan du lieu vao cac view
         public void bind(Food food) {
-            // Gan ten mon an
             binding.txtFoodName.setText(food.getTitle());
-            // Gan gia mon an, dinh dang voi don vi "d"
             binding.txtFoodPrice.setText(String.format("%d d", food.getPrice()));
-            // Gan thoi gian chuan bi
             binding.txtFoodTime.setText(food.getTimeValue());
-            // Gan hinh anh mon an
             Glide.with(context).load(food.getImagePath()).into(binding.imgFood);
-            // Xu ly su kien click tren item
+
+            // Xử lý sự kiện click bằng cách gọi listener
             binding.getRoot().setOnClickListener(v -> {
-                Intent intent = new Intent(context, FoodDetailActivity.class);
-                intent.putExtra("food", food); // Truyen toan bo doi tuong Food qua Intent
-                context.startActivity(intent);
+                if (onFoodClickListener != null) {
+                    onFoodClickListener.onFoodClick(food);
+                }
             });
         }
     }
+
 }
