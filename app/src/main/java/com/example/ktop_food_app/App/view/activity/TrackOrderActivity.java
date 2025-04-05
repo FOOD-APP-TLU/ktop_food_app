@@ -20,17 +20,18 @@ import com.example.ktop_food_app.App.view.adapter.OrderAdapter;
 import com.example.ktop_food_app.App.viewmodel.FoodViewModel;
 import com.example.ktop_food_app.App.viewmodel.OrderViewModel;
 import com.example.ktop_food_app.databinding.ActivityTrackOrdersBinding;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class TrackOrderActivity extends AppCompatActivity implements OrderAdapter.OnOrderClickListener {
 
+    private final List<Order> orderList = new ArrayList<>();
+    private final List<Food> foodList = new ArrayList<>();
     private ActivityTrackOrdersBinding binding;
     private OrderViewModel orderViewModel;
     private OrderAdapter adapter;
     private FoodAdapter foodAdapter;
-    private List<Order> orderList = new ArrayList<>();
-    private List<Food> foodList = new ArrayList<>();
     private FoodViewModel foodViewModel;
 
     @Override
@@ -53,15 +54,15 @@ public class TrackOrderActivity extends AppCompatActivity implements OrderAdapte
     }
 
     private void initRecyclerView() {
-        adapter = new OrderAdapter(this, orderList, this);
+        // Use VIEW_TYPE_TRACK_ORDER for TrackOrderActivity
+        adapter = new OrderAdapter(this, orderList, this, OrderAdapter.VIEW_TYPE_TRACK_ORDER);
         binding.trackOrders.setLayoutManager(new LinearLayoutManager(this));
         binding.trackOrders.setAdapter(adapter);
 
-        foodAdapter = new FoodAdapter(this, foodList);
-        binding.viewAllFoods.setLayoutManager(new GridLayoutManager(this,2));
+        foodAdapter = new FoodAdapter(this, foodList, null);
+        binding.viewAllFoods.setLayoutManager(new GridLayoutManager(this, 2));
         binding.viewAllFoods.setAdapter(foodAdapter);
-        binding.viewAllFoods.addItemDecoration(new FoodListActivity.GridSpacingItemDecoration(2, 16, true));
-
+        binding.viewAllFoods.addItemDecoration(new GridSpacingItemDecoration(2, 16, true));
     }
 
     private void initViewModel() {
@@ -76,12 +77,12 @@ public class TrackOrderActivity extends AppCompatActivity implements OrderAdapte
             adapter.notifyDataSetChanged();
         });
 
-        // Lấy dữ liệu từ FoodViewModel
+        // Load data from FoodViewModel
         foodViewModel = new ViewModelProvider(this).get(FoodViewModel.class);
         foodViewModel.getFoodListLiveData().observe(this, foods -> {
             foodList.clear();
             foodList.addAll(foods);
-            foodAdapter.notifyDataSetChanged(); // Cập nhật RecyclerView của món ăn
+            foodAdapter.notifyDataSetChanged();
         });
 
         orderViewModel.getErrorMassage().observe(this, error -> {
@@ -90,7 +91,6 @@ public class TrackOrderActivity extends AppCompatActivity implements OrderAdapte
     }
 
     private void setupListeners() {
-
         binding.btnBack.setOnClickListener(v -> finish());
 
         binding.viewAllFoods.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
@@ -103,20 +103,30 @@ public class TrackOrderActivity extends AppCompatActivity implements OrderAdapte
 
             @Override
             public void onChildViewDetachedFromWindow(android.view.View view) {
-                // Không xử lý gì
+                // No action needed
             }
         });
     }
 
     @Override
     public void onOrderClick(Order order) {
-        // Xử lý khi người dùng click vào một đơn hàng, có thể chuyển sang OrderDetailsActivity
         Intent intent = new Intent(TrackOrderActivity.this, TrackOrderDetailActivity.class);
         intent.putExtra("order", order);
         startActivity(intent);
     }
 
-    // Lớp tạo khoảng cách giữa các item
+    // Implement remaining listener methods (not used in TrackOrderActivity but required by interface)
+    @Override
+    public void onReorderClick(Order order) {
+        // Not applicable for TrackOrderActivity, leave empty or add logic if needed
+    }
+
+    @Override
+    public void onReviewClick(Order order) {
+        // Not applicable for TrackOrderActivity, leave empty or add logic if needed
+    }
+
+    // GridSpacingItemDecoration class remains unchanged
     public static class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
         private final int spanCount;
         private final int spacing;

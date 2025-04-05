@@ -16,8 +16,7 @@
         android:theme="@style/Theme.Ktop_food_app"
         tools:targetApi="31">
         <activity
-        <activity
-            android:name=".App.view.activity.TrackOrderDetailActitivity"
+            android:name=".App.view.activity.TrackOrderDetailActivity"
             android:exported="false" />
         <activity
             android:name=".App.view.activity.TrackOrderActivity"
@@ -28,7 +27,7 @@
         <activity
             android:name=".App.view.activity.OrderHistoryDetailsActivity"
             android:enableOnBackInvokedCallback="true"
-                  
+
             android:exported="false" />
         <activity
             android:name=".App.view.activity.OrderHistoryActivity"

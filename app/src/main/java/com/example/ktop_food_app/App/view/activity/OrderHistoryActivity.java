@@ -30,7 +30,7 @@ public class OrderHistoryActivity extends AppCompatActivity implements OrderAdap
     private ActivityOrderHistoryBinding binding;
     private OrderViewModel orderViewModel;
     private OrderAdapter adapter;
-    private DatabaseReference db;  // Changed to DatabaseReference
+    private DatabaseReference db;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,7 +47,8 @@ public class OrderHistoryActivity extends AppCompatActivity implements OrderAdap
     }
 
     private void initRecyclerView() {
-        adapter = new OrderAdapter(this, orderList, this);
+        // Use VIEW_TYPE_ORDER_HISTORY for OrderHistoryActivity
+        adapter = new OrderAdapter(this, orderList, this, OrderAdapter.VIEW_TYPE_ORDER_HISTORY);
         binding.recyclerViewOrderHistory.setLayoutManager(new LinearLayoutManager(this));
         binding.recyclerViewOrderHistory.setAdapter(adapter);
     }
@@ -58,7 +59,7 @@ public class OrderHistoryActivity extends AppCompatActivity implements OrderAdap
             orderList.clear();
             // Filter for completed orders only
             for (Order order : orders) {
-                if ("completed".equalsIgnoreCase(order.getStatus())) {
+                if ("completed".equalsIgnoreCase(order.getStatus()) || "cancelled".equals(order.getStatus())) {
                     orderList.add(order);
                 }
             }
