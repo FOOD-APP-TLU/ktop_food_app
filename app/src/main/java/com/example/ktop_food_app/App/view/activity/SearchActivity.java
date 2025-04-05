@@ -1,86 +1,52 @@
 package com.example.ktop_food_app.App.view.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.ktop_food_app.App.model.data.entity.Category;
 import com.example.ktop_food_app.App.model.data.entity.Food;
 import com.example.ktop_food_app.App.view.adapter.FoodAdapter;
-import com.example.ktop_food_app.App.viewmodel.FoodViewModel;
-import com.example.ktop_food_app.databinding.ActivityFoodListBinding;
+import com.example.ktop_food_app.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FoodListActivity extends AppCompatActivity {
-    private ActivityFoodListBinding binding; // ViewBinding
+public class SearchActivity extends AppCompatActivity {
+
+    private RecyclerView recyclerView;
     private FoodAdapter foodAdapter;
-    private Category category;
-    private FoodViewModel foodViewModel;
+    private List<Food> filteredList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityFoodListBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        setContentView(R.layout.activity_search);
 
-        initView();
-        getCategoryFromIntent();
+        initViews();
         setupRecyclerView();
-        setupViewModel();
+        loadData();
         setupListeners();
     }
 
-    private void initView() {
-        binding.txtCategoryTitle.setText(""); // Để tránh lỗi null khi chưa nhận dữ liệu
-    }
-
-    private void getCategoryFromIntent() {
-        Object serializableExtra = getIntent().getSerializableExtra("category");
-        if (serializableExtra instanceof Category) {
-            category = (Category) serializableExtra;
-            binding.txtCategoryTitle.setText(category.getName());
-        }
+    private void initViews() {
+        recyclerView = findViewById(R.id.recycler_view);
     }
 
     private void setupRecyclerView() {
-        binding.recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
-        foodAdapter = new FoodAdapter(this, new ArrayList<>(), null);
-        binding.recyclerView.setAdapter(foodAdapter);
-        binding.recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, 16, true));
-    }
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        filteredList = new ArrayList<>();
+        foodAdapter = new FoodAdapter(this, filteredList, null);
+        recyclerView.setAdapter(foodAdapter);
+        recyclerView.addItemDecoration(new GridSpacingItemDecoration(2, 16, true));
 
-    private void setupViewModel() {
-        foodViewModel = new ViewModelProvider(this).get(FoodViewModel.class);
-        foodViewModel.getFoodListLiveData().observe(this, this::updateFoodList);
-        foodViewModel.getErrorMessage().observe(this, errorMessage ->
-                Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
-        );
-    }
-
-    private void updateFoodList(List<Food> foodList) {
-        if (foodList != null) {
-            List<Food> filteredFoods = new ArrayList<>();
-            for (Food food : foodList) {
-                if (food.getCategoryId() == category.getId()) {
-                    filteredFoods.add(food);
-                }
-            }
-            foodAdapter.updateData(filteredFoods);
-        }
-    }
-
-    private void setupListeners() {
-        binding.btnBack.setOnClickListener(v -> finish());
-
-        binding.recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+        // Thêm listener để điều chỉnh kích thước item (giống FoodListActivity)
+        recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
             public void onChildViewAttachedToWindow(android.view.View view) {
                 ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
@@ -95,7 +61,28 @@ public class FoodListActivity extends AppCompatActivity {
         });
     }
 
-    // Lớp tạo khoảng cách giữa các item
+    private void loadData() {
+        Intent intent = getIntent();
+        filteredList = (ArrayList<Food>) intent.getSerializableExtra("filtered_list");
+        String query = intent.getStringExtra("search_query");
+
+        // Cập nhật tiêu đề
+        TextView txtFoodTitle = findViewById(R.id.txt_food_title);
+        if (query != null && !query.isEmpty()) {
+            txtFoodTitle.setText(query);
+        }
+
+        // Hiển thị danh sách kết quả
+        if (filteredList != null) {
+            foodAdapter.setFoodList(filteredList);
+        }
+    }
+
+    private void setupListeners() {
+        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+    }
+
+    // Lớp tạo khoảng cách giữa các item (tương tự FoodListActivity)
     public static class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
         private final int spanCount;
         private final int spacing;

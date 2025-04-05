@@ -15,7 +15,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ktop_food_app"
         tools:targetApi="31">
-
+        <activity
+            android:name=".App.view.activity.SearchActivity"
+            android:exported="false" />
         <activity
             android:name=".App.view.activity.OrderHistoryDetailsActivity"
             android:enableOnBackInvokedCallback="true"
@@ -30,6 +32,7 @@
             android:exported="true"
             android:label="Thanh toán"
             android:launchMode="singleTask">
+
             <!-- Intent-filter cho ZaloPay -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -71,6 +74,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

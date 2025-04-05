@@ -187,7 +187,6 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    // Trong HomeActivity, phương thức setupRecyclerViews()
     private void setupRecyclerViews() {
         // GridView cho Categories
         categoryAdapter = new CategoryAdapter(this, new ArrayList<>());
@@ -196,7 +195,7 @@ public class HomeActivity extends AppCompatActivity {
         // RecyclerView cho Foods
         binding.home.recyclerViewFoods.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        foodAdapter = new FoodAdapter(this, new ArrayList<>());
+        foodAdapter = new FoodAdapter(this, new ArrayList<>(), null);
         binding.home.recyclerViewFoods.setAdapter(foodAdapter);
     }
 
@@ -224,21 +223,45 @@ public class HomeActivity extends AppCompatActivity {
     private void handleSearchButton() {
         binding.home.searchButtonIcon.setOnClickListener(v -> {
             String query = binding.home.edtSearch.getText().toString().trim();
-            filterFoods(query);
+            if (query.isEmpty()) {
+                Toast.makeText(HomeActivity.this, "Vui lòng nhập từ khóa tìm kiếm", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Lọc danh sách món ăn
+            List<Food> filteredList = new ArrayList<>();
+            String normalizedQuery = handleRemoveDiacritics(query.toLowerCase());
+            for (Food food : allFoods) {
+                String normalizedTitle = handleRemoveDiacritics(food.getTitle().toLowerCase());
+                if (food.isBestFood() && normalizedTitle.contains(normalizedQuery)) {
+                    filteredList.add(food);
+                }
+            }
+            
+            if (filteredList.isEmpty()) {
+                Toast.makeText(HomeActivity.this, "Không tìm thấy món ăn nào", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Truyền danh sách sang SearchActivity
+            Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
+            intent.putExtra("filtered_list", new ArrayList<>(filteredList));
+            intent.putExtra("search_query", query);
+            startActivity(intent);
         });
     }
 
-    private void filterFoods(String query) {
-        List<Food> filteredList = new ArrayList<>();
-        for (Food food : allFoods) {
-            if (food.isBestFood() && food.getTitle().toLowerCase().contains(query.toLowerCase())) {
-                filteredList.add(food);
-            }
-        }
-        foodAdapter.setFoodList(filteredList);
-        foodAdapter.notifyDataSetChanged();
+    private String handleRemoveDiacritics(String text) {
+        text = text.toLowerCase();
+        text = text.replaceAll("[àáạảãâầấậẩẫăằắặẳẵ]", "a");
+        text = text.replaceAll("[èéẹẻẽêềếệểễ]", "e");
+        text = text.replaceAll("[ìíịỉĩ]", "i");
+        text = text.replaceAll("[òóọỏõôồốộổỗơờớợởỡ]", "o");
+        text = text.replaceAll("[ùúụủũưừứựửữ]", "u");
+        text = text.replaceAll("[ỳýỷỹỵ]", "y");
+        text = text.replaceAll("đ", "d");
+        return text;
     }
-
 
     private void loadData() {
         foodRepository.getFoodList(new FirebaseFoodData.FoodCallback() {
