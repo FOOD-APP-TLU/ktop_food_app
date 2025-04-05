@@ -7,7 +7,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.ktop_food_app.App.model.data.entity.Order;
@@ -29,6 +28,7 @@ public class TrackOrderDetailActivity extends AppCompatActivity {
     private TrackOrderDetailAdapter itemAdapter;
     private Order order;
     private DecimalFormat decimalFormat;
+    private DatabaseReference ordersRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,21 +38,27 @@ public class TrackOrderDetailActivity extends AppCompatActivity {
         binding = ActivityTrackOrderDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Initialize DecimalFormat
         DecimalFormatSymbols symbols = new DecimalFormatSymbols();
         symbols.setGroupingSeparator('.');
         decimalFormat = new DecimalFormat("#,###", symbols);
 
-        // Gọi các hàm
+        // Initialize Firebase Database Reference
+        ordersRef = FirebaseDatabase.getInstance("https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app")
+                .getReference("orders");
+
+        // Load and process order data
         if (!loadOrderData()) {
             return;
         }
+
         displayOrderDetails();
         setupRecyclerView();
         setupListeners();
         updateCancelButtonState(order.getStatus());
     }
 
-    // Hàm lấy dữ liệu đơn hàng từ Intent
+    // Load order data from Intent
     private boolean loadOrderData() {
         order = (Order) getIntent().getSerializableExtra("order");
         if (order == null) {
@@ -63,7 +69,7 @@ public class TrackOrderDetailActivity extends AppCompatActivity {
         return true;
     }
 
-    // Hàm hiển thị chi tiết đơn hàng
+    // Display order details on UI
     private void displayOrderDetails() {
         binding.txtOrderId.setText(order.getOrderId());
         binding.txtOrderStatus.setText(order.getStatus());
@@ -82,7 +88,7 @@ public class TrackOrderDetailActivity extends AppCompatActivity {
         if ("COD".equalsIgnoreCase(paymentMethod)) {
             binding.paymentMethod.setText("Cash on Delivery");
             binding.paymentIcon.setImageResource(R.drawable.ic_cod);
-        } else if ("Bank".equalsIgnoreCase(paymentMethod)) {
+        } else if ("Banking(Zalo Pay)".equalsIgnoreCase(paymentMethod)) {
             binding.paymentMethod.setText(paymentMethod);
             binding.paymentIcon.setImageResource(R.drawable.ic_bank);
         } else {
@@ -90,14 +96,15 @@ public class TrackOrderDetailActivity extends AppCompatActivity {
             binding.paymentIcon.setVisibility(View.GONE);
         }
 
-        binding.txtTotalAmount.setText(decimalFormat.format(order.getTotalPrice()) + " d");
-        binding.txtTotalPriceOfItem.setText(decimalFormat.format(order.getTotalPrice()) + " d");
-        binding.txtDiscount.setText(decimalFormat.format(order.getDiscount()) + " d");
-        binding.txtTotalPayment.setText(decimalFormat.format(order.getTotalPrice() - order.getDiscount()) + " d");
-
+        double totalPrice = order.getTotalPrice();
+        double discount = order.getDiscount();
+        binding.txtTotalAmount.setText(decimalFormat.format(totalPrice) + " d");
+        binding.txtTotalPriceOfItem.setText(decimalFormat.format(totalPrice) + " d");
+        binding.txtDiscount.setText(decimalFormat.format(discount) + " d");
+        binding.txtTotalPayment.setText(decimalFormat.format(totalPrice - discount) + " d");
     }
 
-    // Hàm thiết lập RecyclerView
+    // Setup RecyclerView for order items
     private void setupRecyclerView() {
         if (order.getItems() != null && !order.getItems().isEmpty()) {
             itemAdapter = new TrackOrderDetailAdapter(this, order.getItems());
@@ -109,61 +116,60 @@ public class TrackOrderDetailActivity extends AppCompatActivity {
         }
     }
 
+    // Update cancel/received button states based on order status
     private void updateCancelButtonState(String status) {
-        if ("Pending".equalsIgnoreCase(status)) {
+        if ("pending".equalsIgnoreCase(status)) {
             binding.cancelOrderButton.setEnabled(true);
-            binding.cancelOrderButton.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.bg_btn_enabled_true));
+            binding.cancelOrderButton.setBackgroundResource(R.drawable.custom_bg_success);
             binding.orderReceivedButton.setEnabled(false);
-            binding.orderReceivedButton.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.bg_btn_enabled_false));
-        } else if ("Shipping".equalsIgnoreCase(status)) {
+            binding.orderReceivedButton.setBackgroundResource(R.drawable.custom_bg_default);
+        } else if ("shipping".equalsIgnoreCase(status)) {
             binding.cancelOrderButton.setEnabled(false);
-            binding.cancelOrderButton.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.bg_btn_enabled_false));
+            binding.cancelOrderButton.setBackgroundResource(R.drawable.custom_bg_default);
+            binding.orderReceivedButton.setEnabled(true);
+            binding.orderReceivedButton.setBackgroundResource(R.drawable.custom_bg_success);
         }
     }
 
-    // Hàm thiết lập sự kiện cho nút back
+    // Setup button listeners
     private void setupListeners() {
         binding.btnBack.setOnClickListener(v -> finish());
 
-        DatabaseReference ordersRef = FirebaseDatabase.getInstance("https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app")
-                .getReference("orders")
-                .child(order.getOrderId());
-
-        // Nút xác nhận đã nhận hàng
+        // Confirm order received
         binding.orderReceivedButton.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
-                    .setTitle("Order Confirmation")
-                    .setMessage("Have you received your order?")
-                    .setPositiveButton("Yes", (dialog, which) -> {
-                        ordersRef.child("status").setValue("completed")
+                    .setTitle("Xác nhận đơn hàng")
+                    .setMessage("Bạn đã nhận được đơn hàng chưa?")
+                    .setPositiveButton("Có", (dialog, which) -> {
+                        ordersRef.child(order.getOrderId()).child("status").setValue("completed")
                                 .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(this, "Order marked as received!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(this, "Đơn hàng đã được đánh dấu là nhận thành công!", Toast.LENGTH_SHORT).show();
                                     finish();
                                 })
                                 .addOnFailureListener(e -> {
-                                    Toast.makeText(this, "Error updating order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(this, "Lỗi khi cập nhật đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 });
                     })
-                    .setNegativeButton("Cancel", null)
+                    .setNegativeButton("Hủy", null)
                     .show();
         });
 
-        // Nút hủy đơn hàng
+        // Cancel order
         binding.cancelOrderButton.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
-                    .setTitle("Cancel Order")
-                    .setMessage("Are you sure you want to cancel this order?")
-                    .setPositiveButton("Cancel Order", (dialog, which) -> {
-                        ordersRef.child("status").setValue("cancelled")
+                    .setTitle("Hủy đơn hàng")
+                    .setMessage("Bạn có chắc chắn muốn hủy đơn hàng này không?")
+                    .setPositiveButton("Hủy đơn hàng", (dialog, which) -> {
+                        ordersRef.child(order.getOrderId()).child("status").setValue("cancelled")
                                 .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(this, "Order has been cancelled.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(this, "Đơn hàng đã được hủy.", Toast.LENGTH_SHORT).show();
                                     finish();
                                 })
                                 .addOnFailureListener(e -> {
-                                    Toast.makeText(this, "Error updating order: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(this, "Lỗi khi cập nhật đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 });
                     })
-                    .setNegativeButton("No", null)
+                    .setNegativeButton("Không", null)
                     .show();
         });
     }

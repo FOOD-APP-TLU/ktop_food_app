@@ -92,7 +92,7 @@ public class OrderHistoryDetailsActivity extends AppCompatActivity {
         if ("COD".equalsIgnoreCase(paymentMethod)) {
             binding.paymentMethod.setText("Cash on Delivery");
             binding.paymentIcon.setImageResource(R.drawable.ic_cod);
-        } else if ("Banking(ZaloPay)".equalsIgnoreCase(paymentMethod)) {
+        } else if ("Banking(Zalo Pay)".equalsIgnoreCase(paymentMethod)) {
             binding.paymentMethod.setText(paymentMethod);
             binding.paymentIcon.setImageResource(R.drawable.ic_bank);
         } else {
