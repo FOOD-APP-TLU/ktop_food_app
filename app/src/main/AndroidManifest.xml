@@ -13,6 +13,15 @@
         android:theme="@style/Theme.Ktop_food_app"
         tools:targetApi="31">
         <activity
+            android:name=".App.view.activity.TrackOrderDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".App.view.activity.TrackOrderDetailActitivity"
+            android:exported="false" />
+        <activity
+            android:name=".App.view.activity.TrackOrderActivity"
+            android:exported="false" />
+        <activity
             android:name=".App.view.activity.PaymentActivity"
             android:exported="false" />
         <activity

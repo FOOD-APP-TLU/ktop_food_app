@@ -157,7 +157,8 @@ public class HomeActivity extends AppCompatActivity {
                 Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
                 startActivity(intent); // Sử dụng startActivity
             } else if (itemId == R.id.nav_track_order) {
-                Toast.makeText(this, "Navigating to Track Order Activity", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(this, TrackOrderActivity.class);
+                startActivity(intent);
             } else if (itemId == R.id.nav_order_history) {
                 Toast.makeText(this, "Navigating to Order History Activity", Toast.LENGTH_SHORT).show();
             }
