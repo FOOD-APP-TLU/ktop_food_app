@@ -96,12 +96,11 @@ public class TrackOrderDetailActivity extends AppCompatActivity {
             binding.paymentIcon.setVisibility(View.GONE);
         }
 
-        double totalPrice = order.getTotalPrice();
-        double discount = order.getDiscount();
-        binding.txtTotalAmount.setText(decimalFormat.format(totalPrice) + " d");
-        binding.txtTotalPriceOfItem.setText(decimalFormat.format(totalPrice) + " d");
-        binding.txtDiscount.setText(decimalFormat.format(discount) + " d");
-        binding.txtTotalPayment.setText(decimalFormat.format(totalPrice - discount) + " d");
+        double totalPriceOfItems = order.getTotalPrice() + order.getDiscount();
+        binding.txtTotalAmount.setText(decimalFormat.format(totalPriceOfItems) + " d");
+        binding.txtTotalPriceOfItem.setText(decimalFormat.format(totalPriceOfItems) + " d");
+        binding.txtDiscount.setText(decimalFormat.format(order.getDiscount()) + " d");
+        binding.txtTotalPayment.setText(decimalFormat.format(order.getTotalPrice()) + " d");
     }
 
     // Setup RecyclerView for order items
