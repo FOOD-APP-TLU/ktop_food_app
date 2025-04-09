@@ -52,6 +52,7 @@ public class PaymentActivity extends AppCompatActivity {
     private String userId;
     private String selectedPaymentMethod = "COD";
     private PaymentViewModel viewModel;
+    private boolean isCodAllowed = true; // Biến để kiểm tra xem COD có được phép hay không
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +108,7 @@ public class PaymentActivity extends AppCompatActivity {
         if (cartItems != null && !cartItems.isEmpty()) {
             viewModel.loadUserInfo(userId);
             viewModel.displayCartItems(cartItems);
+            viewModel.checkCancelledCount(userId); // Kiểm tra số lần hủy đơn hàng
         } else {
             Toast.makeText(this, "Giỏ hàng trống!", Toast.LENGTH_SHORT).show();
             finish();
@@ -129,7 +131,28 @@ public class PaymentActivity extends AppCompatActivity {
             if (message != null) Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         });
         viewModel.getPaymentSuccess().observe(this, success -> {
-            if (success != null && success) finish();
+            if (success != null && success) {
+                Intent homeIntent = new Intent(PaymentActivity.this, HomeActivity.class);
+                startActivity(homeIntent);
+                finish();
+            }
+        });
+
+        // Quan sát số lần hủy đơn hàng để hạn chế phương thức thanh toán
+        viewModel.getCancelledCount().observe(this, count -> {
+            if (count >= 3) {
+                isCodAllowed = false;
+                selectedPaymentMethod = "Banking(Zalo Pay)"; // Mặc định chọn ZaloPay
+                bankCheckmark.setVisibility(View.VISIBLE);
+                cashCheckmark.setVisibility(View.GONE);
+                cashOption.setEnabled(false); // Vô hiệu hóa tùy chọn COD
+                cashOption.setAlpha(0.5f); // Làm mờ tùy chọn COD để người dùng biết không chọn được
+                Toast.makeText(this, "Bạn đã hủy đơn hàng quá 3 lần, chỉ có thể thanh toán qua ZaloPay!", Toast.LENGTH_LONG).show();
+            } else {
+                isCodAllowed = true;
+                cashOption.setEnabled(true); // Kích hoạt tùy chọn COD
+                cashOption.setAlpha(1.0f); // Bỏ làm mờ
+            }
         });
 
         // Thiết lập sự kiện click
@@ -140,14 +163,18 @@ public class PaymentActivity extends AppCompatActivity {
             cashCheckmark.setVisibility(View.GONE);
         });
         cashOption.setOnClickListener(v -> {
-            selectedPaymentMethod = "COD";
-            cashCheckmark.setVisibility(View.VISIBLE);
-            bankCheckmark.setVisibility(View.GONE);
+            if (isCodAllowed) {
+                selectedPaymentMethod = "COD";
+                cashCheckmark.setVisibility(View.VISIBLE);
+                bankCheckmark.setVisibility(View.GONE);
+            } else {
+                Toast.makeText(this, "Bạn không thể chọn thanh toán COD do đã hủy đơn hàng quá 3 lần!", Toast.LENGTH_SHORT).show();
+            }
         });
         paymentButton.setOnClickListener(v -> showPaymentConfirmationDialog());
         enterCodeLabel.setOnClickListener(v -> {
             String voucherCode = voucherCodeInput.getText().toString().trim();
-            viewModel.applyVoucherCode(voucherCode);
+            viewModel.applyVoucherCode(userId, voucherCode);
         });
     }
 
@@ -166,8 +193,10 @@ public class PaymentActivity extends AppCompatActivity {
         builder.setPositiveButton("Có", (dialog, which) -> {
             if ("Banking(Zalo Pay)".equals(selectedPaymentMethod)) {
                 processZaloPayPayment(String.valueOf(finalAmount1.longValue()));
-            } else {
+            } else if (isCodAllowed) {
                 processPayment();
+            } else {
+                Toast.makeText(this, "Bạn không thể thanh toán COD do đã hủy đơn hàng quá 3 lần!", Toast.LENGTH_SHORT).show();
             }
         });
         builder.setNegativeButton("Không", (dialog, which) -> dialog.dismiss());
@@ -180,7 +209,6 @@ public class PaymentActivity extends AppCompatActivity {
         try {
             JSONObject data = orderApi.createOrder(amount);
             String code = data.getString("return_code");
-//            Toast.makeText(this, "return_code: " + code, Toast.LENGTH_SHORT).show();
 
             if (code.equals("1")) {
                 String zpTransToken = data.getString("zp_trans_token");
@@ -190,7 +218,6 @@ public class PaymentActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
                             new AlertDialog.Builder(PaymentActivity.this)
                                     .setTitle("Thanh toán thành công")
-//                                    .setMessage(String.format("TransactionId: %s - TransToken: %s", transactionId, transToken))
                                     .setPositiveButton("OK", (dialog, which) -> processPayment())
                                     .setNegativeButton("Hủy", null)
                                     .show();
@@ -201,7 +228,6 @@ public class PaymentActivity extends AppCompatActivity {
                     public void onPaymentCanceled(String zpTransToken, String appTransID) {
                         new AlertDialog.Builder(PaymentActivity.this)
                                 .setTitle("Hủy thanh toán")
-//                                .setMessage(String.format("zpTransToken: %s", zpTransToken))
                                 .setPositiveButton("OK", (dialog, which) -> {})
                                 .setNegativeButton("Hủy", null)
                                 .show();
@@ -211,7 +237,6 @@ public class PaymentActivity extends AppCompatActivity {
                     public void onPaymentError(ZaloPayError zaloPayError, String zpTransToken, String appTransID) {
                         new AlertDialog.Builder(PaymentActivity.this)
                                 .setTitle("Thanh toán thất bại")
-//                                .setMessage(String.format("ZaloPayErrorCode: %s - TransToken: %s", zaloPayError.toString(), zpTransToken))
                                 .setPositiveButton("OK", (dialog, which) -> {})
                                 .setNegativeButton("Hủy", null)
                                 .show();
