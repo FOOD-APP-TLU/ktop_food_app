@@ -52,7 +52,7 @@ dependencies {
     implementation(
         fileTree(
             mapOf(
-                "dir" to "E:\\zalopay",
+                "dir" to "/home/hanh/Downloads/zalopay",
                 "include" to listOf("*.aar", "*.jar"),
                 "exclude" to listOf("")
             )
