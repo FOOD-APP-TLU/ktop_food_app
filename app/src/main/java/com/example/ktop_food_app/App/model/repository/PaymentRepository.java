@@ -16,9 +16,14 @@ public class PaymentRepository {
         firebasePaymentData.loadUserInfo(userId, listener);
     }
 
+    // Phương thức chuyển tiếp yêu cầu kiểm tra số lần hủy đơn hàng
+    public void checkCancelledCount(String userId, FirebasePaymentData.OnCancelledCountCheckedListener listener) {
+        firebasePaymentData.checkCancelledCount(userId, listener);
+    }
+
     // Phương thức chuyển tiếp yêu cầu áp dụng mã giảm giá đến FirebasePaymentData
-    public void applyVoucherCode(String voucherCode, FirebasePaymentData.OnVoucherAppliedListener listener) {
-        firebasePaymentData.applyVoucherCode(voucherCode, listener);
+    public void applyVoucherCode(String userId, String voucherCode, FirebasePaymentData.OnVoucherAppliedListener listener) {
+        firebasePaymentData.applyVoucherCode(userId, voucherCode, listener);
     }
 
     // Phương thức chuyển tiếp yêu cầu xử lý thanh toán đến FirebasePaymentData

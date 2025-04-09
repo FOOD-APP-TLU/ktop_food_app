@@ -31,6 +31,8 @@ public class PaymentViewModel extends ViewModel {
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     // LiveData để thông báo trạng thái thanh toán (thành công hay thất bại)
     private final MutableLiveData<Boolean> paymentSuccess = new MutableLiveData<>();
+    // LiveData để lưu trữ số lần hủy đơn hàng
+    private final MutableLiveData<Long> cancelledCount = new MutableLiveData<>(0L);
 
     // Constructor: Nhận PaymentRepository để giao tiếp với dữ liệu
     public PaymentViewModel(PaymentRepository repository) {
@@ -77,6 +79,11 @@ public class PaymentViewModel extends ViewModel {
         return paymentSuccess;
     }
 
+    // Getter để PaymentActivity quan sát số lần hủy đơn hàng
+    public LiveData<Long> getCancelledCount() {
+        return cancelledCount;
+    }
+
     // Phương thức cập nhật giá cuối cùng
     private void updateFinalPrice() {
         Double price = totalPrice.getValue();
@@ -106,6 +113,22 @@ public class PaymentViewModel extends ViewModel {
         });
     }
 
+    // Phương thức kiểm tra số lần hủy đơn hàng
+    public void checkCancelledCount(String userId) {
+        repository.checkCancelledCount(userId, new FirebasePaymentData.OnCancelledCountCheckedListener() {
+            @Override
+            public void onCancelledCountChecked(long count) {
+                cancelledCount.setValue(count);
+            }
+
+            @Override
+            public void onCancelledCountError(String error) {
+                errorMessage.setValue(error);
+                cancelledCount.setValue(0L); // Mặc định là 0 nếu có lỗi
+            }
+        });
+    }
+
     // Phương thức hiển thị danh sách món ăn trong giỏ hàng
     public void displayCartItems(List<CartItem> cartItems) {
         List<PaymentItem> items = new ArrayList<>();
@@ -129,14 +152,14 @@ public class PaymentViewModel extends ViewModel {
     }
 
     // Phương thức áp dụng mã giảm giá
-    public void applyVoucherCode(String voucherCode) {
+    public void applyVoucherCode(String userId, String voucherCode) {
         // Kiểm tra nếu mã rỗng thì thông báo lỗi
         if (voucherCode.isEmpty()) {
             errorMessage.setValue("Vui lòng nhập mã giảm giá!");
             return;
         }
         // Gọi repository để kiểm tra mã giảm giá
-        repository.applyVoucherCode(voucherCode, new FirebasePaymentData.OnVoucherAppliedListener() {
+        repository.applyVoucherCode(userId, voucherCode, new FirebasePaymentData.OnVoucherAppliedListener() {
             @Override
             public void onVoucherApplied(double appliedDiscount) {
                 // Cập nhật giá trị giảm giá và thông báo thành công

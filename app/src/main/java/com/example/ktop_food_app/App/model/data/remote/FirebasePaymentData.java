@@ -10,10 +10,12 @@ import com.google.firebase.database.ValueEventListener;
 // Lớp FirebasePaymentData chịu trách nhiệm giao tiếp trực tiếp với Firebase Realtime Database
 public class FirebasePaymentData {
     private final DatabaseReference databaseReference;
+    private String appliedVoucherCode; // Lưu tạm mã giảm giá đã áp dụng trong phiên thanh toán
 
     // Constructor: Khởi tạo tham chiếu đến Firebase Realtime Database với URL cụ thể
     public FirebasePaymentData() {
         databaseReference = FirebaseDatabase.getInstance("https://ktop-food-database-default-rtdb.asia-southeast1.firebasedatabase.app").getReference();
+        appliedVoucherCode = null; // Khởi tạo mã giảm giá là null
     }
 
     // Phương thức lấy thông tin người dùng từ Firebase
@@ -43,32 +45,51 @@ public class FirebasePaymentData {
         });
     }
 
+    // Phương thức kiểm tra số lần hủy đơn hàng của người dùng
+    public void checkCancelledCount(String userId, OnCancelledCountCheckedListener listener) {
+        databaseReference.child("users").child(userId).child("cancelled").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    Long cancelledCount = dataSnapshot.getValue(Long.class);
+                    listener.onCancelledCountChecked(cancelledCount != null ? cancelledCount : 0);
+                } else {
+                    // Nếu không có node cancelled, mặc định là 0
+                    listener.onCancelledCountChecked(0);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                listener.onCancelledCountError("Lỗi khi kiểm tra số lần hủy đơn: " + databaseError.getMessage());
+            }
+        });
+    }
+
     // Phương thức kiểm tra và áp dụng mã giảm giá từ Firebase
-    public void applyVoucherCode(String voucherCode, OnVoucherAppliedListener listener) {
-        // Tham chiếu đến node voucher trong Firebase
-        DatabaseReference voucherRef = databaseReference.child("voucher");
+    public void applyVoucherCode(String userId, String voucherCode, OnVoucherAppliedListener listener) {
+        // Tham chiếu đến node users/{userId}/voucher/{voucherCode}
+        DatabaseReference voucherRef = databaseReference.child("users").child(userId).child("voucher").child(voucherCode);
         voucherRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                boolean voucherFound = false;
-                double discount = 0.0;
-                // Duyệt qua từng mục trong node voucher
-                for (DataSnapshot voucherSnapshot : dataSnapshot.getChildren()) {
-                    // Lấy mã giảm giá và giá trị giảm từ dữ liệu
-                    String dbVoucherCode = voucherSnapshot.child("code").getValue(String.class);
-                    Long dbDiscount = voucherSnapshot.child("discount").getValue(Long.class);
-                    // So sánh mã nhập với mã trong database
-                    if (dbVoucherCode != null && dbVoucherCode.equals(voucherCode)) {
-                        discount = (dbDiscount != null) ? dbDiscount.doubleValue() : 0.0;
-                        voucherFound = true;
-                        break;
+                if (dataSnapshot.exists()) {
+                    // Lấy giá trị maxVoucher (số lần sử dụng hợp lệ) và discount từ dữ liệu
+                    Long maxVoucher = dataSnapshot.child("maxVoucher").getValue(Long.class);
+                    Long dbDiscount = dataSnapshot.child("discount").getValue(Long.class);
+
+                    if (maxVoucher != null && maxVoucher > 0) {
+                        double discount = (dbDiscount != null) ? dbDiscount.doubleValue() : 0.0;
+                        // Lưu mã giảm giá đã áp dụng để sử dụng sau khi thanh toán
+                        appliedVoucherCode = voucherCode;
+                        // Trả về giá trị giảm giá nếu mã còn hợp lệ
+                        listener.onVoucherApplied(discount);
+                    } else {
+                        // Nếu maxVoucher <= 0, mã không còn hợp lệ
+                        listener.onVoucherError("Mã giảm giá đã hết lượt sử dụng!");
                     }
-                }
-                // Nếu tìm thấy mã hợp lệ, trả về giá trị giảm giá
-                if (voucherFound) {
-                    listener.onVoucherApplied(discount);
                 } else {
-                    // Nếu không tìm thấy, thông báo lỗi
+                    // Nếu không tìm thấy mã, thông báo lỗi
                     listener.onVoucherError("Mã giảm giá không hợp lệ!");
                 }
             }
@@ -89,16 +110,57 @@ public class FirebasePaymentData {
                 .addOnSuccessListener(aVoid -> {
                     // Xóa giỏ hàng của người dùng sau khi đặt hàng thành công
                     databaseReference.child("users").child(userId).child("cart").removeValue()
-                            .addOnSuccessListener(aVoid1 -> listener.onPaymentSuccess())
+                            .addOnSuccessListener(aVoid1 -> {
+                                // Kiểm tra nếu có mã giảm giá đã áp dụng
+                                if (appliedVoucherCode != null && !appliedVoucherCode.isEmpty()) {
+                                    updateVoucherUsage(userId, appliedVoucherCode);
+                                    appliedVoucherCode = null; // Đặt lại mã giảm giá sau khi sử dụng
+                                }
+                                listener.onPaymentSuccess();
+                            })
                             .addOnFailureListener(e -> listener.onPaymentFailure("Lỗi khi xóa giỏ hàng: " + e.getMessage()));
                 })
                 .addOnFailureListener(e -> listener.onPaymentFailure("Lỗi khi đặt hàng: " + e.getMessage()));
+    }
+
+    // Phương thức cập nhật số lần sử dụng mã giảm giá
+    private void updateVoucherUsage(String userId, String voucherCode) {
+        DatabaseReference voucherRef = databaseReference.child("users").child(userId).child("voucher").child(voucherCode);
+        voucherRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    Long maxVoucher = dataSnapshot.child("maxVoucher").getValue(Long.class);
+                    if (maxVoucher != null && maxVoucher > 0) {
+                        long newMaxVoucher = maxVoucher - 1;
+                        if (newMaxVoucher <= 0) {
+                            // Xóa node nếu số lần sử dụng còn lại bằng 0
+                            voucherRef.removeValue();
+                        } else {
+                            // Cập nhật số lần sử dụng mới
+                            voucherRef.child("maxVoucher").setValue(newMaxVoucher);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Có thể ghi log lỗi nếu cần
+            }
+        });
     }
 
     // Interface callback để thông báo kết quả lấy thông tin người dùng
     public interface OnUserInfoLoadedListener {
         void onUserInfoLoaded(String address, String username, String phoneNumber);
         void onUserInfoError(String error);
+    }
+
+    // Interface callback để thông báo kết quả kiểm tra số lần hủy đơn
+    public interface OnCancelledCountCheckedListener {
+        void onCancelledCountChecked(long count);
+        void onCancelledCountError(String error);
     }
 
     // Interface callback để thông báo kết quả áp dụng mã giảm giá
