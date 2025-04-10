@@ -86,7 +86,8 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
 
         public void bind(Food food) {
             binding.txtFoodName.setText(food.getTitle());
-            binding.txtFoodPrice.setText(String.format("%d d", food.getPrice()));
+            binding.txtFoodPrice.setText(String.format("%d đ", food.getPrice()));
+            binding.txtFoodRating.setText(String.format("%.1f", food.getStar()));
             binding.txtFoodTime.setText(food.getTimeValue());
             Glide.with(context).load(food.getImagePath()).into(binding.imgFood);
 

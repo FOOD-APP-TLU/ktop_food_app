@@ -132,7 +132,7 @@ public class PaymentActivity extends AppCompatActivity {
         });
         viewModel.getPaymentSuccess().observe(this, success -> {
             if (success != null && success) {
-                Intent homeIntent = new Intent(PaymentActivity.this, HomeActivity.class);
+                Intent homeIntent = new Intent(PaymentActivity.this, TrackOrderActivity.class);
                 startActivity(homeIntent);
                 finish();
             }
