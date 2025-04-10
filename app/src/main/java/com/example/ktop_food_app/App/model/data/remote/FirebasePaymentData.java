@@ -90,7 +90,7 @@ public class FirebasePaymentData {
                     }
                 } else {
                     // Nếu không tìm thấy mã, thông báo lỗi
-                    listener.onVoucherError("Mã giảm giá không hợp lệ!");
+                    listener.onVoucherError("Mã giảm giá không hợp lệ hoặc đã hết lượt sử dụng!");
                 }
             }
 

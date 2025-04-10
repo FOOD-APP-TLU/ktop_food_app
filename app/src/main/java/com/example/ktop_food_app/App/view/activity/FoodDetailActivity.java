@@ -11,12 +11,18 @@ import com.example.ktop_food_app.App.model.repository.AuthRepository;
 import com.example.ktop_food_app.databinding.ActivityFoodDetailBinding;
 import com.google.firebase.database.DatabaseReference;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+
 public class FoodDetailActivity extends AppCompatActivity {
     private ActivityFoodDetailBinding binding;
     private Food food;
     private int quantity = 1;
     private DatabaseReference cartRef;
     private AuthRepository authRepository;
+    private final DecimalFormat decimalFormat = new DecimalFormat("#,###", new DecimalFormatSymbols() {{
+        setGroupingSeparator('.');
+    }});
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +47,7 @@ public class FoodDetailActivity extends AppCompatActivity {
         if (food != null) {
             Glide.with(this).load(food.getImagePath()).into(binding.imgFoodDetail);
             binding.txtFoodDetailName.setText(food.getTitle());
-            binding.txtFoodDetailPrice.setText(food.getPrice() + " đ");
+            binding.txtFoodDetailPrice.setText(decimalFormat.format(food.getPrice()) + " đ");
             binding.txtFoodDetailDescription.setText(food.getDescription());
             binding.txtFoodDetailRating.setText(String.valueOf(food.getStar()));
             binding.txtFoodDetailTime.setText(food.getTimeValue());
@@ -72,7 +78,8 @@ public class FoodDetailActivity extends AppCompatActivity {
     }
 
     private void updateTotalPrice() {
-        binding.txtTotalPrice.setText((food.getPrice() * quantity) + " đ");
+        long totalPrice = (long) food.getPrice() * quantity;
+        binding.txtTotalPrice.setText(decimalFormat.format(totalPrice) + " đ");
     }
 
     private void addToCart() {

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#e5e5e5">
+    android:background="@color/background_color">
 
     <!-- Header -->
     <LinearLayout
@@ -38,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginRight="48dp"
                 android:fontFamily="@font/annapurna_sil_bold"
-                android:text="Order track detail"
+                android:text="Order details"
                 android:textAlignment="center"
                 android:textColor="#884F04"
                 android:textSize="32sp"

@@ -10,16 +10,24 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.ktop_food_app.App.model.data.entity.PaymentItem;
 import com.example.ktop_food_app.R;
+
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PaymentAdapter extends RecyclerView.Adapter<PaymentAdapter.PaymentViewHolder> {
 
     private List<PaymentItem> paymentItems;
+    private final DecimalFormat decimalFormat;
 
     // Constructor to initialize the list of payment items
     public PaymentAdapter(List<PaymentItem> paymentItems) {
         this.paymentItems = paymentItems != null ? paymentItems : new ArrayList<>();
+
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        decimalFormat = new DecimalFormat("#,###", symbols);
     }
 
     // Method to update the list of payment items and notify the adapter of changes
@@ -43,11 +51,12 @@ public class PaymentAdapter extends RecyclerView.Adapter<PaymentAdapter.PaymentV
         // Get the PaymentItem at the current position
         PaymentItem paymentItem = paymentItems.get(position);
 
+
         // Bind data to the views
         holder.foodTitleTextView.setText(paymentItem.getFoodTitle());
-        holder.priceTextView.setText(String.format("%,.0f đ", paymentItem.getPrice()));
+        holder.priceTextView.setText(decimalFormat.format(paymentItem.getPrice()) + " đ");
         holder.quantityTextView.setText(String.format("Quantity %d", paymentItem.getQuantity()));
-        holder.totalItemPriceTextView.setText(String.format("%,.0f đ", paymentItem.getTotalItemPrice()));
+        holder.totalItemPriceTextView.setText(decimalFormat.format(paymentItem.getTotalItemPrice()) + " đ");
 
         // Load the image using Glide if the image path is available
         if (paymentItem.getImagePath() != null && !paymentItem.getImagePath().isEmpty()) {

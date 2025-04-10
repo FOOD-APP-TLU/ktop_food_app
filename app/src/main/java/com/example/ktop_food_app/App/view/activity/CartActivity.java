@@ -40,7 +40,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnTot
         // Initialize UI components
         recyclerView = findViewById(R.id.cart_recycler_view);
         placeOrderButton = findViewById(R.id.place_order_button);// Initialize this
-        btnBack = findViewById(R.id.back_button);
+        btnBack = findViewById(R.id.btn_back);
 
         // Initialize AuthRepository
         authRepository = new AuthRepository(new FirebaseAuthData());

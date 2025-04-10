@@ -16,6 +16,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
@@ -24,6 +26,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     private final Context context;
     private OnTotalPriceChangedListener totalPriceChangedListener;
     private OnItemRemovedListener itemRemovedListener;
+    private final DecimalFormat decimalFormat;
 
     public CartAdapter(List<CartItem> cartItems, Context context) {
         this.cartItems = cartItems;
@@ -31,6 +34,9 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         if (context instanceof OnTotalPriceChangedListener) {
             this.totalPriceChangedListener = (OnTotalPriceChangedListener) context;
         }
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        decimalFormat = new DecimalFormat("#,###", symbols);
     }
 
     public void setOnItemRemovedListener(OnItemRemovedListener listener) {
@@ -50,9 +56,9 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         CartItem item = cartItems.get(position);
 
         holder.nameTextView.setText(item.getName());
-        holder.priceTextView.setText(String.format("%,d đ", item.getPrice()));
+        holder.priceTextView.setText(decimalFormat.format(item.getPrice()) + " đ");
         holder.quantityTextView.setText(String.valueOf(item.getQuantity()));
-        holder.totalPriceTextView.setText(String.format("%,d đ", item.getTotalPrice()));
+        holder.totalPriceTextView.setText(decimalFormat.format(item.getTotalPrice()) + " đ");
         Glide.with(context).load(item.getImagePath()).into(holder.productImageView);
 
         holder.decreaseButton.setOnClickListener(v -> {

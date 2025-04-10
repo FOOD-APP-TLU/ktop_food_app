@@ -13,10 +13,10 @@ import com.example.ktop_food_app.App.model.data.entity.Food;
 import com.example.ktop_food_app.App.view.activity.FoodDetailActivity;
 import com.example.ktop_food_app.databinding.ItemFoodBinding;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
-
-// Interface để thông báo khi một món ăn được chọn
 
 public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder> {
 
@@ -76,17 +76,23 @@ public class FoodAdapter extends RecyclerView.Adapter<FoodAdapter.FoodViewHolder
         private final ItemFoodBinding binding;
         private final Context context;
         private final OnFoodClickListener onFoodClickListener;
+        private final DecimalFormat decimalFormat;
 
         public FoodViewHolder(@NonNull ItemFoodBinding binding, Context context, OnFoodClickListener listener) {
             super(binding.getRoot());
             this.binding = binding;
             this.context = context;
             this.onFoodClickListener = listener;
+
+            DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+            symbols.setGroupingSeparator('.');
+            decimalFormat = new DecimalFormat("#,###", symbols);
         }
 
         public void bind(Food food) {
             binding.txtFoodName.setText(food.getTitle());
-            binding.txtFoodPrice.setText(String.format("%d đ", food.getPrice()));
+
+            binding.txtFoodPrice.setText(decimalFormat.format(food.getPrice())+ " đ");
             binding.txtFoodRating.setText(String.format("%.1f", food.getStar()));
             binding.txtFoodTime.setText(food.getTimeValue());
             Glide.with(context).load(food.getImagePath()).into(binding.imgFood);

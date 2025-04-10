@@ -29,6 +29,8 @@ import com.example.ktop_food_app.R;
 
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -52,7 +54,10 @@ public class PaymentActivity extends AppCompatActivity {
     private String userId;
     private String selectedPaymentMethod = "COD";
     private PaymentViewModel viewModel;
-    private boolean isCodAllowed = true; // Biến để kiểm tra xem COD có được phép hay không
+    private boolean isCodAllowed = true;
+    private final DecimalFormat decimalFormat = new DecimalFormat("#,###", new DecimalFormatSymbols() {{
+        setGroupingSeparator('.');
+    }});
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +70,7 @@ public class PaymentActivity extends AppCompatActivity {
 
         // Khởi tạo ZaloPay SDK
         ZaloPaySDK.init(2553, Environment.SANDBOX);
+
 
         // Khởi tạo các view
         addressTextView = findViewById(R.id.address_text_view);
@@ -118,13 +124,13 @@ public class PaymentActivity extends AppCompatActivity {
         viewModel.getAddress().observe(this, address -> addressTextView.setText(address));
         viewModel.getUsername().observe(this, username -> usernameTextView.setText(username));
         viewModel.getTotalPrice().observe(this, price -> {
-            totalAmountTextView.setText(String.format("%,.0f đ", price));
-            paymentDetailsAmountTextView.setText(String.format("%,.0f đ", price));
+            totalAmountTextView.setText(decimalFormat.format(price)+" đ");
+            paymentDetailsAmountTextView.setText(decimalFormat.format(price)+" đ");
         });
-        viewModel.getDiscount().observe(this, discount -> discountAmountTextView.setText(String.format("%,.0f đ", discount)));
+        viewModel.getDiscount().observe(this, discount -> discountAmountTextView.setText(decimalFormat.format(discount)+" đ"));
         viewModel.getFinalPrice().observe(this, finalPrice -> {
-            totalPaymentDetailsTextView.setText(String.format("%,.0f đ", finalPrice));
-            totalPaymentAmountTextView.setText(String.format("%,.0f đ", finalPrice));
+            totalPaymentDetailsTextView.setText(decimalFormat.format(finalPrice)+" đ");
+            totalPaymentAmountTextView.setText(decimalFormat.format(finalPrice)+" đ");
         });
         viewModel.getPaymentItems().observe(this, adapter::updateItems);
         viewModel.getErrorMessage().observe(this, message -> {
@@ -176,6 +182,8 @@ public class PaymentActivity extends AppCompatActivity {
             String voucherCode = voucherCodeInput.getText().toString().trim();
             viewModel.applyVoucherCode(userId, voucherCode);
         });
+
+
     }
 
     private void showPaymentConfirmationDialog() {

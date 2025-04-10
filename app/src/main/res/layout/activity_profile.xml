@@ -16,7 +16,7 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:id="@+id/btnBack"
+            android:id="@+id/btn_back"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:clickable="true"
@@ -26,7 +26,7 @@
             android:src="@drawable/ic_back" />
 
         <TextView
-            android:id="@+id/txtCategoryTitle"
+            android:id="@+id/txt_category_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginRight="48dp"

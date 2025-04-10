@@ -44,9 +44,10 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/lilita_one"
             android:gravity="end"
-            android:text="40.000d"
+            android:text="40.000đ"
             android:textColor="@color/text_price_food"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold"/>
     </LinearLayout>
 
     <!-- Food rating -->
