@@ -50,6 +50,7 @@ git clone git@github.com:FOOD-APP-TLU/ktop_food_app.git
   <img src="https://github.com/user-attachments/assets/e0dccfb7-cbe5-4240-9ab1-06414d598a26" width="300" />
   <img src="https://github.com/user-attachments/assets/4cdde4e1-083b-403c-9805-eb757b3e0e63" width="300" />
   <img src="https://github.com/user-attachments/assets/f85713c3-7725-453d-9306-eec22a303618" width="300" />
+  <img src="https://github.com/user-attachments/assets/b33beee9-89e6-4bf5-a000-e2836e0fd243" width="300" />
   <img src="https://github.com/user-attachments/assets/5c64ed2a-116d-429b-bd2e-e0e2278e22a5" width="300" />
   <img src="https://github.com/user-attachments/assets/23da82ce-1890-4148-b7cb-079f91737cdc" width="300" />
   <img src="https://github.com/user-attachments/assets/d296b86d-45c5-4c24-9d38-8424e5866adb" width="300" />
@@ -61,11 +62,10 @@ git clone git@github.com:FOOD-APP-TLU/ktop_food_app.git
   <img src="https://github.com/user-attachments/assets/4a828d3a-94cd-416b-957d-3bb648cc7701" width="300" />
   <img src="https://github.com/user-attachments/assets/b606aa34-d585-4684-b43e-9fbfbd239c4d" width="300" />
   <img src="https://github.com/user-attachments/assets/2db0b0cb-b885-4559-bc73-c81b26ae305d" width="300" />
-  <img src="https://github.com/user-attachments/assets/b33beee9-89e6-4bf5-a000-e2836e0fd243" width="300" />
 </p>
 
 ## 🧱 Technologies Used
--Java (Android) – Main programming language
+- Java (Android) – Main programming language
 - Android Studio – IDE for building Android apps
 - Firebase – Authentication, Realtime Database
 - XML Layouts – UI design
