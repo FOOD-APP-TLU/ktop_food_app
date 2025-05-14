@@ -91,11 +91,12 @@ We welcome contributions from the community! If you'd like to contribute to this
 
 Feel free to contact the team if you have questions or suggestions:
 
-- Your Team:
+#### Your Team:
+### Email
 - 📧 [Vi Hong Minh](mailto:vihongminh5504@gmail.com)
 - 📧 [Nguyen Hoai Nam](mailto:namtlhb68@gmail.com)
 - 📧 [Nguyen Duy Hanh](mailto:hanh27052004@gmail.com)
 - 📧 [Le Doan Anh](mailto:ledoananhhtg2003@gmail.com)
-
+### GITHUB and FIREBASE
 - 🔗 GitHub: [https://github.com/FOOD-APP-TLU/ktop_food_app.git](https://github.com/FOOD-APP-TLU/ktop_food_app.git)
 - 🔗 Firebase: [Database](https://console.firebase.google.com/project/ktop-food-database/database/ktop-food-database-default-rtdb/data)
